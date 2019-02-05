@@ -1,0 +1,382 @@
+---
+title: "Mojave_Endemic_16S_Qiime2"
+author: "Nat Pombubpa"
+date: "Updated on February 5, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Mojave Endemic Bacteria
+
+###Note:Documentation for Mojave 16S data using Qiime2 Silva extracted length classifier
+This is a documentation for otu table, taxonomy table, and tree which were generated from Qiime2 using DADA2 and Silva database classifier extracted lenght (515-806). Note: Mitochondria and Chloroplast have been filterd and removed from OTU table.
+
+###STEP1: Load all necessary packages for analysis
+More information about Phyloseq can be found at the following link: [Phyloseq](https://joey711.github.io/phyloseq/)
+If you get error in this step, you probably need to install any packages which causes error.
+
+```{r warning=FALSE, message=FALSE}
+library(ape)
+library(vegan)
+library(plyr)
+library(dplyr)
+library(scales)
+library(grid)
+library(reshape2)
+library(phyloseq)
+library(magrittr)
+library(ggplot2)
+library(ggpubr)
+library(data.table)
+library(tidyr)
+library(tidyverse)
+```
+
+###STEP2: Transition data from Qiime2 to Phyloseq
+Note: otu table and taxonomy table have been fixed right after Qiime2. Nat's Qiime2 script already include this step.
+However, you can simply fix by changing "#Feature ID" to "OTU ID" ot "OTU.ID" and the following commnand should work fine.
+
+####STEP2.1: Import otu table from Qiime2
+
+```{r}
+otu = read.table(file="MojaveBacQ2FWLEsilva515806.otu_table.fix.txt", header=T, sep='\t')
+```
+
+```{r}
+head(otu)
+```
+
+Please note dimension of otu table. For this project, there are 21697 rows(OTU.ID) which will need to be matched to taxonomy table before starting Phyloseq analysis.
+```{r}
+dim(otu)
+```
+
+####STEP2.2: Import taxonomy table from Qiime2
+
+```{r}
+tax <- read.table(file="taxonomy.fix.tsv", sep='\t', header=TRUE)
+head(tax)
+```
+
+Taxonomy table contains 22081 rows(OTU.ID) which is more than otu table. (Mitochondria and Chloroplast were removed in otu table which resulted in less number of OTU.ID in otu table.)
+```{r}
+dim(tax)
+```
+
+####STEP2.3: Match OTU.ID between otu and taxonomy table
+Keep only OTU.ID in taxonomy table  that were found in otu table.
+```{r}
+tax_filtered <- tax[tax$OTU.ID %in% otu$OTU.ID,]
+head(tax_filtered)
+```
+
+Check dimension of tax_filterd table: the number of OTU.ID should be the same as OTU table (in this case: 21697 OTU.ID)
+```{r}
+dim(tax_filtered)
+```
+
+Number of rows for "tax_filtered" and "otu" should be the same.
+```{r}
+dim(otu)
+```
+
+####STEP2.4: Select only OTU.ID column and taxonomy for taxonomy table
+Taxonomy table from Qiime2 also contains the third column which is "Confidence". We will remove this column before loading data to Phyloseq.
+```{r}
+tax_filtered = tax_filtered[,c(1,2)]
+```
+
+After selection, taxonomy column will be separated into 7 levels as "Kingdom","Phylum","Class","Order", "Family", "Genus","Species"
+```{r}
+tax_filtered = separate(tax_filtered, Taxon, c("Kingdom","Phylum","Class","Order", "Family", "Genus","Species"), sep= ";", remove=TRUE)
+```
+
+At the end of this step, taxonomy table will contain OTU.ID column + 7 levels taxonomy columns (total of 8 columns). 
+```{r}
+dim(tax_filtered)
+```
+
+```{r}
+head(tax_filtered)
+```
+
+Save "filtered" taxonomy table for Phyloseq and future usage.
+```{r}
+write.csv(tax_filtered, file="taxonomy_phyloseq_fix.csv")
+```
+
+###STEP3: Import otu table for analysis using Phyloseq 
+
+```{r warning=FALSE}
+otus <- read.table("MojaveBacQ2FWLEsilva515806.otu_table.fix.txt",
+                   header=T,sep="\t",row.names = 1)
+otumat <- as(as.matrix(otus), "matrix")
+OTU = otu_table(otumat, taxa_are_rows = TRUE)
+```
+
+###STEP4: Import taxonomy table for analysis using Phyloseq
+This taxonomy table was created from STEP2.
+```{r warning=FALSE}
+taxmat <- read.csv("taxonomy_phyloseq_fix.csv", 
+                   sep=",",row.names=1)
+row.names(taxmat) = taxmat$OTU.ID
+taxmat <- as(as.matrix(taxmat),"matrix")
+TAX = tax_table(taxmat)
+```
+
+###STEP5: Import tree file for analysis using Phyloseq
+
+```{r warning=FALSE}
+treefile = "tree.nwk"
+tree = read.tree(treefile)
+```
+
+###STEP6: Import mapping file for analysis using Phyloseq
+
+1.Check mapping file before import to R, R will automatically change sample name that starts with number or contain “-” in sample name. If you get error in this step, you should check sample name first. 
+
+2.First column of first row should not start with #, R will not read the first row that starts with #
+
+3. You can choose which samples to include in analysis by indicating specific group in the column
+
+```{r warning=FALSE}
+meta = read.table("Mojave_mappingfile_8-Aug-2018.txt",
+                  header=TRUE,row.names=1,
+                  sep="\t",stringsAsFactors=FALSE)
+meta <- meta[which(meta$Layer %in% c("Surface")),]
+```
+
+Check if your metadata file has been import successfully and correctly, the output will show a table of your metadata file (mapping file). *If you do not have header, you might start your first row with # (remove # and reload your mapping file).
+
+```{r}
+head(meta)
+```
+
+Construct sample_data-class using imported metadata
+```{r warning=FALSE}
+sampleData <- sample_data(meta)
+```
+
+###STEP7: Construct Phyloseq object
+To construct phyloseq object, otu table, taxonomy table, and sampleData are required. Phylogenetic tree can be included, but it is not necessary for constructing phyloseq object.
+Construct Phyloseq object called "Physeq"
+
+```{r warning=FALSE}
+physeq = phyloseq(OTU,TAX,sampleData,tree)
+```
+
+###STEP8: Check phyloseq object
+This should indicate that your physeq is a "phyloseq-class experiment-level object"
+
+```{r}
+physeq
+```
+
+###STEP9: Remove singletons
+Remove any OTUs that present only one time.
+
+```{r}
+physeq.prune = prune_taxa(taxa_sums(physeq) > 5, physeq)
+```
+
+```{r}
+physeq.prune
+```
+
+###STEP10: Plot read counts to check dataset
+Check read counts: any samples that have very low reads should be removed.
+[Ref](http://evomics.org/wp-content/uploads/2016/01/phyloseq-Lab-01-Answers.html)
+
+```{r}
+readcount = data.table(as(sample_data(physeq.prune), "data.frame"),
+                 TotalReads = sample_sums(physeq.prune), 
+                 keep.rownames = TRUE)
+setnames(readcount, "rn", "SampleID")
+
+#For plotting, use command below.
+#SeqDepth = ggplot(readcount, aes(TotalReads)) + geom_histogram() + ggtitle("Sequencing Depth")
+```
+
+TotalReads of all the samples can be in this table (select only SampleID and TotalReads columns).
+In order to check samples with low number of reads, "order()" can be used to sort "TotalReads" column.
+In this dataset, N55.Rhizo has very low number of reads, so will will filter this sample out using the next minimum number of reads.
+```{r}
+readcount = readcount[order(readcount$TotalReads), c("SampleID", "TotalReads")]
+```
+
+```{r}
+head(readcount)
+```
+
+###STEP11: Rarefy OTUs to a minimum number of reads
+Rarefy OTUs (remove any samples that has very low number of reads)
+If this step work fine, you have successfully imported data to R and completely generate phyloseq object as "physeq.prune.rarefy".
+```{r warning=FALSE}
+set.seed(711)
+physeq.prune.rarefy = rarefy_even_depth(physeq.prune, sample.size = 37386, replace = FALSE, trimOTUs = TRUE)
+physeq.prune.rarefy
+```
+
+###Merge samples by metadata
+```{r}
+physeq.prune.rarefy.merge.sitelayer <- merge_samples(physeq.prune.rarefy, "Site_layer")
+sample_data(physeq.prune.rarefy.merge.sitelayer)$Site_layer <- factor(sample_names(physeq.prune.rarefy.merge.sitelayer))
+physeq.prune.rarefy.merge.sitelayer
+```
+
+```{r}
+physeq.prune.rarefy.merge.sitelayer.binary = transform_sample_counts(physeq.prune.rarefy.merge.sitelayer, function(abund) 1*(abund>0))
+```
+
+```{r}
+OTU_SF_merge_site = otu_table(physeq.prune.rarefy.merge.sitelayer.binary)
+OTU_SF_merge_site = t(OTU_SF_merge_site)
+head(OTU_SF_merge_site)
+```
+
+
+```{r}
+OTU_SF_merge_site_endemic = OTU_SF_merge_site[rowSums(OTU_SF_merge_site == 1) == 1, ]
+head(OTU_SF_merge_site_endemic)
+```
+
+```{r}
+OTU_SF_merge_site_endemic_df = data.frame(OTUendemic = row.names(OTU_SF_merge_site_endemic))
+dim(OTU_SF_merge_site_endemic_df)
+```
+
+
+```{r warning=FALSE}
+otu <- read.table("MojaveBacQ2FWLEsilva515806.otu_table.fix.txt",header=T,sep="\t")
+otus.filtered = otu[otu$OTU.ID %in% OTU_SF_merge_site_endemic_df$OTUendemic,]
+otus.filtered.rn = otus.filtered[,-1]
+rownames(otus.filtered.rn) = otus.filtered[,1]
+otumat.endemic <- as(as.matrix(otus.filtered.rn), "matrix")
+OTU.endemic = otu_table(otumat.endemic, taxa_are_rows = TRUE)
+```
+
+```{r warning=FALSE}
+taxmat <- read.csv("taxonomy_phyloseq_fix.csv", 
+                   sep=",",row.names=1)
+row.names(taxmat) = taxmat$OTU.ID
+taxmat <- as(as.matrix(taxmat),"matrix")
+TAX = tax_table(taxmat)
+```
+
+```{r warning=FALSE}
+physeq.endemic = phyloseq(OTU.endemic,TAX,sampleData,tree)
+```
+
+```{r}
+physeq.endemic
+```
+
+```{r}
+physeq.endemic.prune = prune_taxa(taxa_sums(physeq.endemic) > 5, physeq)
+```
+
+```{r}
+physeq.endemic.prune
+```
+
+```{r}
+readcount = data.table(as(sample_data(physeq.endemic.prune), "data.frame"),
+                 TotalReads = sample_sums(physeq.endemic.prune), 
+                 keep.rownames = TRUE)
+setnames(readcount, "rn", "SampleID")
+readcount = readcount[order(readcount$TotalReads), c("SampleID", "TotalReads")]
+head(readcount)
+```
+
+```{r warning=FALSE}
+set.seed(711)
+physeq.endemic.prune.rarefy = rarefy_even_depth(physeq.endemic.prune, sample.size = 1555, replace = FALSE, trimOTUs = TRUE)
+physeq.endemic.prune.rarefy
+```
+
+###Merge samples by metadata
+```{r}
+physeq.endemic.prune.rarefy.merge.sitelayer <- merge_samples(physeq.endemic.prune.rarefy, "Site_layer")
+sample_data(physeq.endemic.prune.rarefy.merge.sitelayer)$Site_layer <- factor(sample_names(physeq.endemic.prune.rarefy.merge.sitelayer))
+physeq.endemic.prune.rarefy.merge.sitelayer
+```
+
+```{r}
+Heatmap.sitelayer.endemic.cyano = subset_taxa(physeq.endemic.prune.rarefy.merge.sitelayer, Phylum == "D_1__Cyanobacteria")
+Heatmap.sitelayer.endemic.cyano <- prune_taxa(names(sort(taxa_sums(Heatmap.sitelayer.endemic.cyano),TRUE)[1:100]), Heatmap.sitelayer.endemic.cyano)
+Heatmap.sitelayer.endemic.cyano.plot = plot_heatmap(Heatmap.sitelayer.endemic.cyano, "PCoA", "unifrac", "Site_layer", "Family")+ ggtitle("Cyanobacteria heatmap") + theme(plot.title = element_text(hjust = 0.5))
+print(Heatmap.sitelayer.endemic.cyano.plot)
+
+#ggsave("/Volumes/GoogleDrive/My Drive/UCR2019/Mojave_project2019/Mojave_Project/Mojave_16S_Qiime2/Figures/Cyanobacteria Heatmap by Site and Layer.png", plot = Heatmap.sitelayer.cyano.plot, width = 8, height = 10)
+
+#Mac's preview doesn't work well with heatmap. Still not sure how to fix this but will use png for now.
+#pdf("/Volumes/GoogleDrive/My Drive/UCR2018/MacAir2018/Mojave_Project/Mojave_16S_Qiime2/Figures/Bacterial Heatmap by Site and Layer.pdf" )
+#Heatmap.sitelayer.cyano.plot
+#dev.off()
+```
+
+```{r}
+plot_tree(Heatmap.sitelayer.endemic.cyano, nodelabf=nodeplotboot(), ladderize="left", color="Site_layer", label.tips = "Genus", text.size = 2) 
+```
+
+```{r}
+pdf("/Volumes/GoogleDrive/My Drive/UCR2019/Mojave_project2019/Mojave_Project/Mojave_16S_Qiime2/Figures/Endemic/Endemic_Cyano_top100.pdf" )
+plot_tree(Heatmap.sitelayer.endemic.cyano, nodelabf=nodeplotboot(), ladderize="left", color="Site_layer", label.tips = "Genus", text.size = 2) 
+dev.off()
+```
+
+```{r}
+Heatmap.sitelayer.endemic.proteo = subset_taxa(physeq.endemic.prune.rarefy.merge.sitelayer, Phylum == "D_1__Proteobacteria")
+Heatmap.sitelayer.endemic.proteo <- prune_taxa(names(sort(taxa_sums(Heatmap.sitelayer.endemic.proteo),TRUE)[1:100]), Heatmap.sitelayer.endemic.proteo)
+Heatmap.sitelayer.endemic.protep.plot = plot_heatmap(Heatmap.sitelayer.endemic.proteo, "PCoA", "unifrac", "Site_layer", "Family")+ ggtitle("Proteobacteria heatmap") + theme(plot.title = element_text(hjust = 0.5))
+print(Heatmap.sitelayer.endemic.protep.plot)
+```
+
+
+###Under construction
+
+```{r}
+BacPhylum = as.character(get_taxa_unique(physeq.endemic.prune.rarefy.merge.sitelayer, "Phylum"))
+BacPhylum = BacPhylum[complete.cases(BacPhylum)]
+```
+
+```{r}
+pdf("/Volumes/GoogleDrive/My Drive/UCR2019/Mojave_project2019/Mojave_Project/Mojave_16S_Qiime2/Figures/Endemic/Endemic Bacterial Phylum Tree and Heatmap.pdf", width = 8, height = 5 )
+for (i in BacPhylum) {
+  Endemic.Bac = subset_taxa(physeq.endemic.prune.rarefy.merge.sitelayer, Phylum == i)
+    Endemic.Bac.top100 = prune_taxa(names(sort(taxa_sums(Endemic.Bac),TRUE)[1:100]), Endemic.Bac)
+    Endemic.Bac.top100.plot = plot_heatmap(Endemic.Bac.top100, "PCoA", "unifrac", "Site_layer", "Family")+ ggtitle(i) + theme(plot.title = element_text(hjust = 0.5))
+  #Endemic.Bac.top100.tree = plot_tree(Heatmap.sitelayer.endemic.cyano, nodelabf=nodeplotboot(), ladderize="left", color="Site_layer", label.tips = "Genus", text.size = 2)
+  #print(Endemic.Bac.top100.plot)
+  #print(Endemic.Bac.top100.tree)
+}
+dev.off()
+```
+
+```{r}
+for (i in BacPhylum) {
+  Endemic.Bac = subset_taxa(physeq.endemic.prune.rarefy.merge.sitelayer, Phylum == i)
+  #Endemic.Bac.top100 <- prune_taxa(names(sort(taxa_sums(Endemic.Bac),TRUE)[1:100]), Endemic.Bac)
+  #print(Endemic.Bac.top100)
+  Endemic.Bac.top100.plot = plot_heatmap(Endemic.Bac, "PCoA", "unifrac", "Site_layer", "Family")+ ggtitle(i) + theme(plot.title = element_text(hjust = 0.5))
+  #Endemic.Bac.top100.tree = plot_tree(Heatmap.sitelayer.endemic.cyano, nodelabf=nodeplotboot(), ladderize="left", color="Site_layer", label.tips = "Genus", text.size = 2)
+  print(Endemic.Bac.top100.plot)
+  #print(Endemic.Bac.top100.tree)
+}
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
