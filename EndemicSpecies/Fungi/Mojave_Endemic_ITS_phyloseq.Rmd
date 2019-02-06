@@ -294,6 +294,11 @@ ggsave("/Volumes/GoogleDrive/My Drive/UCR2019/Mojave_project2019/MojaveCrusts_20
 #dev.off()
 ```
 
+```{r}
+tax_table(Heatmap.sitelayer.endemic.asco)
+```
+
+
 ###STEP22.2:Plot tree for Ascomycota endemic species
 ```{r}
 plot_tree(Heatmap.sitelayer.endemic.asco, ladderize="left", color="Site_layer", label.tips = "Order", text.size = 2) + ggtitle("Endemic Ascomycota tree") + theme(plot.title = element_text(hjust = 0.5))
