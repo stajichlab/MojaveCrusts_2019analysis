@@ -251,7 +251,7 @@ OTU_SF_merge_site_endemic = OTU_SF_merge_site[rowSums(OTU_SF_merge_site == 1) ==
 head(OTU_SF_merge_site_endemic)
 ```
 
-####STEP14.3:Add OTUs (ASVs) to data frame
+####STEP14.4:Add OTUs (ASVs) to data frame
 Add OTUs which are endemics to data frame which will be use in the next step for OTU selection from full dataset.
 ```{r}
 OTU_SF_merge_site_endemic_df = data.frame(OTUendemic = row.names(OTU_SF_merge_site_endemic))
