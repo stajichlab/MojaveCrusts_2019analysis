@@ -1,0 +1,248 @@
+---
+title: "2019NWanalysis_SF_Fulldataset"
+author: "Nat Pombubpa"
+date: "1/31/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+###STEP1: Load all necessary packages for analysis
+More information about Phyloseq can be found at the following link: [Phyloseq](https://joey711.github.io/phyloseq/)
+If you get error in this step, you probably need to install any packages which causes error.
+
+```{r message=FALSE, warning=FALSE}
+library(ape)
+library(vegan)
+library(dplyr)
+library(scales)
+library(grid)
+library(reshape2)
+library(phyloseq)
+library(magrittr)
+library(ggplot2)
+library(ggpubr)
+library(plyr)
+library(circlize)
+library(data.table)
+```
+
+```{r}
+meta = read.table("Mojave_mappingfile_8-Aug-2018.txt",header=TRUE,row.names=1,sep="\t",stringsAsFactors=FALSE)
+meta <- meta[which(meta$Layer %in% c("Subsurface")),]
+sampleData <- sample_data(meta)
+```
+
+###Import otu table
+```{r}
+otus <- read.table("MC2018FG.BAC.otu_table.csv",header=T,sep=",",row.names=1)
+otumat <- as(as.matrix(otus), "matrix")
+OTU = otu_table(otumat, taxa_are_rows = TRUE)
+```
+
+###Import taxonomy table
+```{r}
+taxmat <- read.table("FG.BAC.taxonomy.fulldataset.csv", header=T,sep=",",row.names=1)
+taxmat <- as(as.matrix(taxmat),"matrix")
+TAX = tax_table(taxmat)
+```
+
+###Construct phyloseq object
+```{r warning=FALSE}
+physeq = phyloseq(OTU,TAX,sampleData)
+```
+
+```{r}
+physeq
+```
+
+
+###STEP9: Remove singletons
+Remove any OTUs that present only one time.
+
+```{r}
+physeq.prune = prune_taxa(taxa_sums(physeq) > 1, physeq)
+```
+
+```{r}
+physeq.prune
+```
+
+###STEP10: Plot read counts to check dataset
+Check read counts: any samples that have very low reads should be removed.
+[Ref](http://evomics.org/wp-content/uploads/2016/01/phyloseq-Lab-01-Answers.html)
+
+```{r}
+readcount = data.table(as(sample_data(physeq.prune), "data.frame"),
+                 TotalReads = sample_sums(physeq.prune), 
+                 keep.rownames = TRUE)
+setnames(readcount, "rn", "SampleID")
+
+#For plotting, use command below.
+#SeqDepth = ggplot(readcount, aes(TotalReads)) + geom_histogram() + ggtitle("Sequencing Depth")
+```
+
+TotalReads of all the samples can be in this table (select only SampleID and TotalReads columns).
+In order to check samples with low number of reads, "order()" can be used to sort "TotalReads" column.
+In this dataset, N55.Rhizo has very low number of reads, so will will filter this sample out using the next minimum number of reads.
+```{r}
+readcount = readcount[order(readcount$TotalReads), c("SampleID", "TotalReads")]
+```
+
+```{r}
+head(readcount)
+```
+
+###STEP11: Rarefy OTUs to a minimum number of reads
+Rarefy OTUs (remove any samples that has very low number of reads)
+If this step work fine, you have successfully imported data to R and completely generate phyloseq object as "physeq.prune.rarefy".
+```{r warning=FALSE}
+set.seed(711)
+physeq.prune.rarefy = rarefy_even_depth(physeq.prune, sample.size = 76106, replace = FALSE, trimOTUs = TRUE)
+physeq.prune.rarefy
+```
+
+agglomerate at Phylum level
+
+```{r}
+ps.taxglom = tax_glom(physeq.prune.rarefy, taxrank="Phylum")
+```
+
+```{r}
+ps.taxglom
+```
+
+check tax table after agglomeration
+
+```{r}
+head(tax_table(ps.taxglom))
+```
+
+###STEP14:Plot network (Phyloseq)
+
+```{r warning=FALSE}
+#ps.taxglom.prune = prune_taxa(names(sort(taxa_sums(ps.taxglom), TRUE))[1:1000], ps.taxglom)
+set.seed(711L)
+psplotnet = plot_net(ps.taxglom, distance = "bray", type = "taxa", laymeth = "circle", color = "Phylum", point_label ="Phylum", hjust = 0.5) + ggtitle("Biocrust Microbial Community Network Analysis")  + theme(plot.title = element_text(hjust = 0.5))
+
+psplotnet
+```
+
+###STEP15:Add data table from plot network to "df" variable
+
+```{r}
+df = psplotnet$data
+```
+
+```{r}
+df.v1 = data.frame(OTU1 = df$v1, stringsAsFactors = T )
+```
+
+```{r}
+df.v2 = data.frame(OTU1 = df$v2, stringsAsFactors = T )
+```
+
+```{r}
+df.v1.v2 = rbind(df.v1,df.v2)
+```
+
+```{r}
+df.v1.v2
+```
+
+```{r}
+tax.circlize <- read.table("FG.BAC.taxonomy.fulldataset.csv", header=T,sep=",")
+#tax_filtered <- tax.circlize[tax.circlize$OTU.ID %in% df.v1.v2$OTU1,]
+#tax_filtered
+```
+
+```{r}
+tax.circlize
+```
+
+construct data.frame by assigning "v1" to OTU1, "v2" to OTU2, and "Distance" to Similarity (using 1-dissimilarity (1-df$Distance))
+
+```{r}
+cdf = data.frame(OTU1 = df$v1, OTU2 = df$v2, Similarity = as.vector(1-df$Distance), stringsAsFactors = TRUE )
+```
+
+```{r}
+cdf
+```
+
+
+```{r}
+cdf.w.tax = data.frame(OTU1=tax.circlize[match(cdf$OTU1, tax.circlize$OTU.ID), 3], OTU2=tax.circlize[match(cdf$OTU2, tax.circlize$OTU.ID), 3], Similarity=cdf$Similarity)
+```
+
+```{r}
+cdf.w.tax
+```
+
+###STEP16:Plot network using circlize package
+
+clear any object that might be drawn by circlize before.
+
+```{r}
+circos.clear()
+```
+
+Plot network from "cdf" data frame that was constructed from Phyloseq plot network
+
+link.visible: plot any of the collumn#3 that similarity is greater than certain number in this case 0.8.
+for (si in get.all.setor.index()) is used to re-label OTUs name, so they are not on top of each others. (You can try plotting without for (si in get.all.setor.index()) to see how it would look )
+
+```{r}
+chordDiagram(cdf.w.tax, annotationTrack = "grid", annotationTrackHeight = 0.01, preAllocateTracks = 1, link.visible = cdf.w.tax[[3]] > 0.5)
+for(si in get.all.sector.index()) {
+    xlim = get.cell.meta.data("xlim", sector.index = si, track.index = 1)
+    ylim = get.cell.meta.data("ylim", sector.index = si, track.index = 1)
+    circos.text(mean(xlim), ylim[1], si, facing = "clockwise", adj = c(-0.1, -0.2),
+    niceFacing = TRUE, cex = 1.2, col = "black", sector.index = si, track.index = 1)
+}
+circos.clear()
+```
+
+
+
+Save plot to PDF
+
+```{r}
+pdf("Biocrust Microbial Community Network Analysis (circlize)Jan31SUB_allFG&BAC.pdf", width = 18, height = 18)
+chordDiagram(cdf.w.tax, annotationTrack = "grid", annotationTrackHeight = 0.01, preAllocateTracks = 1, link.visible = cdf.w.tax[[3]] > 0.45)
+for(si in get.all.sector.index()) {
+    xlim = get.cell.meta.data("xlim", sector.index = si, track.index = 1)
+    ylim = get.cell.meta.data("ylim", sector.index = si, track.index = 1)
+    circos.text(mean(xlim), ylim[1], si, facing = "clockwise", adj = c(-0.1, -0.2),
+    niceFacing = TRUE, cex = 1.2, col = "black", sector.index = si, track.index = 1)
+}
+circos.clear()
+dev.off()
+```
+
+
+###Knufia
+```{r}
+physeq.prune.rarefy = prune_taxa(taxa_sums(physeq.prune.rarefy) > 10, physeq.prune.rarefy)
+physeq.prune.rarefy.Chaetothyriales = subset_taxa(physeq.prune.rarefy, Order == "Chaetothyriales")
+physeq.prune.rarefy.Chaetothyriales = subset_taxa(physeq.prune.rarefy.Chaetothyriales, Genus != "NA")
+```
+
+```{r}
+physeq.prune.rarefy.Chaetothyriales
+```
+
+```{r fig.height=5, fig.width=8, fig.align="center"}
+taxcom_sitelayer = ggplot(data = psmelt(physeq.prune.rarefy.Chaetothyriales), mapping = aes_string(x = "Site_layer" ,y = "Abundance", fill = "Genus" )) + 
+  geom_bar(stat="identity", position="fill") + 
+  ggtitle("Chaetothyriales Taxonomic Composition by Site and Layer")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+  theme(plot.title = element_text(hjust = 0.5))
+
+print(taxcom_sitelayer)
+```
+
+
