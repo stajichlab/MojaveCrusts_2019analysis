@@ -272,11 +272,11 @@ physeq.endemic.prune.rarefy.merge.sitelayer
 ###STEP21:Plot heatmap for all fungal endemic species
 Results show 2 main phylum for endemic species which include Ascomycota and Basidiomycota
 ```{r}
-Heatmap.sitelayer.endemic<- prune_taxa(names(sort(taxa_sums(physeq.endemic.prune.rarefy.merge.sitelayer),TRUE)[1:100]), physeq.endemic.prune.rarefy.merge.sitelayer)
-Heatmap.sitelayer.endemic.plot = plot_heatmap(Heatmap.sitelayer.endemic, "PCoA", "bray", "Site_layer", "Phylum")+ ggtitle("Fungal endemic species heatmap (top 100 OTUs)") + theme(plot.title = element_text(hjust = 0.5))
+Heatmap.sitelayer.endemic<- prune_taxa(names(sort(taxa_sums(physeq.endemic.prune.rarefy.merge.sitelayer),TRUE)[1:50]), physeq.endemic.prune.rarefy.merge.sitelayer)
+Heatmap.sitelayer.endemic.plot = plot_heatmap(Heatmap.sitelayer.endemic, "PCoA", "bray", "Site_layer", "Phylum")+ ggtitle("Fungal endemic species heatmap (top 50 OTUs)") + theme(plot.title = element_text(hjust = 0.5))
 print(Heatmap.sitelayer.endemic.plot)
 
-ggsave("/Volumes/GoogleDrive/My Drive/UCR2019/Mojave_project2019/MojaveCrusts_2019analysis/EndemicSpecies/Fungi/Figures/Fungal_endemic_species_heatmap_top100.png", plot = Heatmap.sitelayer.endemic.plot, width = 8, height = 10)
+ggsave("/Volumes/GoogleDrive/My Drive/UCR2019/Mojave_project2019/MojaveCrusts_2019analysis/EndemicSpecies/Fungi/Figures/Fungal_endemic_species_heatmap_top50.png", plot = Heatmap.sitelayer.endemic.plot, width = 12, height = 8)
 ```
 
 ###STEP22.1:Plot heatmap for Ascomycota endemic species
@@ -286,7 +286,7 @@ Heatmap.sitelayer.endemic.asco <- prune_taxa(names(sort(taxa_sums(Heatmap.sitela
 Heatmap.sitelayer.endemic.asco.plot = plot_heatmap(Heatmap.sitelayer.endemic.asco, "PCoA", "bray", "Site_layer", "Order")+ ggtitle("Endemic Ascomycota heatmap") + theme(plot.title = element_text(hjust = 0.5))
 print(Heatmap.sitelayer.endemic.asco.plot)
 
-ggsave("/Volumes/GoogleDrive/My Drive/UCR2019/Mojave_project2019/MojaveCrusts_2019analysis/EndemicSpecies/Fungi/Figures/Endemic Ascomycota Heatmap.png", plot = Heatmap.sitelayer.endemic.asco.plot, width = 8, height = 10)
+ggsave("/Volumes/GoogleDrive/My Drive/UCR2019/Mojave_project2019/MojaveCrusts_2019analysis/EndemicSpecies/Fungi/Figures/Endemic Ascomycota Heatmap.png", plot = Heatmap.sitelayer.endemic.asco.plot, width = 12, height = 8)
 
 #Mac's preview doesn't work well with heatmap. Still not sure how to fix this but will use png for now.
 #pdf("/Volumes/GoogleDrive/My Drive/UCR2018/MacAir2018/Mojave_Project/Mojave_16S_Qiime2/Figures/Bacterial Heatmap by Site and Layer.pdf" )
