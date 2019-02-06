@@ -325,22 +325,22 @@ physeq.endemic.prune.rarefy.merge.sitelayer
 ###STEP21:Plot heatmap for all bacterial endemic species
 Results show 2 main phylum for endemic species which include Cynobacteria and Proteobacteria
 ```{r}
-Heatmap.sitelayer.endemic<- prune_taxa(names(sort(taxa_sums(physeq.endemic.prune.rarefy.merge.sitelayer),TRUE)[1:100]), physeq.endemic.prune.rarefy.merge.sitelayer)
-Heatmap.sitelayer.endemic.plot = plot_heatmap(Heatmap.sitelayer.endemic, "PCoA", "unifrac", "Site_layer", "Phylum")+ ggtitle("Bacterial endemic species heatmap (top 100 ASVs)") + theme(plot.title = element_text(hjust = 0.5))
+Heatmap.sitelayer.endemic<- prune_taxa(names(sort(taxa_sums(physeq.endemic.prune.rarefy.merge.sitelayer),TRUE)[1:50]), physeq.endemic.prune.rarefy.merge.sitelayer)
+Heatmap.sitelayer.endemic.plot = plot_heatmap(Heatmap.sitelayer.endemic, "PCoA", "unifrac", "Site_layer", "Phylum")+ ggtitle("Bacterial endemic species heatmap (top 50 ASVs)") + theme(plot.title = element_text(hjust = 0.5))
 print(Heatmap.sitelayer.endemic.plot)
 
-ggsave("/Volumes/GoogleDrive/My Drive/UCR2019/Mojave_project2019/MojaveCrusts_2019analysis/EndemicSpecies/Bacteria/Figures/Bacterial_endemic_species_heatmap_top100.png", plot = Heatmap.sitelayer.endemic.plot, width = 8, height = 10)
+ggsave("/Volumes/GoogleDrive/My Drive/UCR2019/Mojave_project2019/MojaveCrusts_2019analysis/EndemicSpecies/Bacteria/Figures/Bacterial_endemic_species_heatmap_top50.png", plot = Heatmap.sitelayer.endemic.plot, width = 12, height = 8)
 ```
 
 
 ###STEP22.1:Plot heatmap for Cyanobacteria endemic species
 ```{r}
 Heatmap.sitelayer.endemic.cyano = subset_taxa(physeq.endemic.prune.rarefy.merge.sitelayer, Phylum == "D_1__Cyanobacteria")
-Heatmap.sitelayer.endemic.cyano <- prune_taxa(names(sort(taxa_sums(Heatmap.sitelayer.endemic.cyano),TRUE)[1:100]), Heatmap.sitelayer.endemic.cyano)
+Heatmap.sitelayer.endemic.cyano <- prune_taxa(names(sort(taxa_sums(Heatmap.sitelayer.endemic.cyano),TRUE)[1:50]), Heatmap.sitelayer.endemic.cyano)
 Heatmap.sitelayer.endemic.cyano.plot = plot_heatmap(Heatmap.sitelayer.endemic.cyano, "PCoA", "unifrac", "Site_layer", "Family")+ ggtitle("Endemic Cyanobacteria heatmap") + theme(plot.title = element_text(hjust = 0.5))
 print(Heatmap.sitelayer.endemic.cyano.plot)
 
-ggsave("/Volumes/GoogleDrive/My Drive/UCR2019/Mojave_project2019/MojaveCrusts_2019analysis/EndemicSpecies/Bacteria/Figures/Endemic Cyanobacteria Heatmap.png", plot = Heatmap.sitelayer.endemic.cyano.plot, width = 8, height = 10)
+ggsave("/Volumes/GoogleDrive/My Drive/UCR2019/Mojave_project2019/MojaveCrusts_2019analysis/EndemicSpecies/Bacteria/Figures/Endemic Cyanobacteria Heatmap.png", plot = Heatmap.sitelayer.endemic.cyano.plot, width = 12, height = 8)
 
 #Mac's preview doesn't work well with heatmap. Still not sure how to fix this but will use png for now.
 #pdf("/Volumes/GoogleDrive/My Drive/UCR2018/MacAir2018/Mojave_Project/Mojave_16S_Qiime2/Figures/Bacterial Heatmap by Site and Layer.pdf" )
@@ -354,19 +354,19 @@ plot_tree(Heatmap.sitelayer.endemic.cyano, nodelabf=nodeplotboot(), ladderize="l
 ```
 
 ```{r}
-pdf("/Volumes/GoogleDrive/My Drive/UCR2019/Mojave_project2019/MojaveCrusts_2019analysis/EndemicSpecies/Bacteria/Figures/Endemic_Cyano_top100.pdf" )
-plot_tree(Heatmap.sitelayer.endemic.cyano, nodelabf=nodeplotboot(), ladderize="left", color="Site_layer", label.tips = "Genus", text.size = 2) + ggtitle("Endemic Cyanobacteria tree (top 100 ASVs)") + theme(plot.title = element_text(hjust = 0.5))
+pdf("/Volumes/GoogleDrive/My Drive/UCR2019/Mojave_project2019/MojaveCrusts_2019analysis/EndemicSpecies/Bacteria/Figures/Endemic_Cyano_top50.pdf" )
+plot_tree(Heatmap.sitelayer.endemic.cyano, nodelabf=nodeplotboot(), ladderize="left", color="Site_layer", label.tips = "Genus", text.size = 2) + ggtitle("Endemic Cyanobacteria tree (top 50 ASVs)") + theme(plot.title = element_text(hjust = 0.5))
 dev.off()
 ```
 ###STEP23.1:Plot heatmap for Proteobacteria endemic species
 
 ```{r}
 Heatmap.sitelayer.endemic.proteo = subset_taxa(physeq.endemic.prune.rarefy.merge.sitelayer, Phylum == "D_1__Proteobacteria")
-Heatmap.sitelayer.endemic.proteo <- prune_taxa(names(sort(taxa_sums(Heatmap.sitelayer.endemic.proteo),TRUE)[1:100]), Heatmap.sitelayer.endemic.proteo)
+Heatmap.sitelayer.endemic.proteo <- prune_taxa(names(sort(taxa_sums(Heatmap.sitelayer.endemic.proteo),TRUE)[1:50]), Heatmap.sitelayer.endemic.proteo)
 Heatmap.sitelayer.endemic.proteo.plot = plot_heatmap(Heatmap.sitelayer.endemic.proteo, "PCoA", "unifrac", "Site_layer", "Family")+ ggtitle("Proteobacteria heatmap") + theme(plot.title = element_text(hjust = 0.5))
 print(Heatmap.sitelayer.endemic.proteo.plot)
 
-ggsave("/Volumes/GoogleDrive/My Drive/UCR2019/Mojave_project2019/MojaveCrusts_2019analysis/EndemicSpecies/Bacteria/Figures/Endemic Proteobacteria Heatmap.png", plot = Heatmap.sitelayer.endemic.proteo.plot, width = 8, height = 10)
+ggsave("/Volumes/GoogleDrive/My Drive/UCR2019/Mojave_project2019/MojaveCrusts_2019analysis/EndemicSpecies/Bacteria/Figures/Endemic Proteobacteria Heatmap.png", plot = Heatmap.sitelayer.endemic.proteo.plot, width = 12, height = 8)
 
 #Mac's preview doesn't work well with heatmap. Still not sure how to fix this but will use png for now.
 #pdf("/Volumes/GoogleDrive/My Drive/UCR2018/MacAir2018/Mojave_Project/Mojave_16S_Qiime2/Figures/Bacterial Heatmap by Site and Layer.pdf" )
@@ -380,8 +380,8 @@ plot_tree(Heatmap.sitelayer.endemic.proteo, nodelabf=nodeplotboot(), ladderize="
 ```
 
 ```{r}
-pdf("/Volumes/GoogleDrive/My Drive/UCR2019/Mojave_project2019/MojaveCrusts_2019analysis/EndemicSpecies/Bacteria/Figures/Endemic_Proteo_top100.pdf" )
-plot_tree(Heatmap.sitelayer.endemic.proteo, nodelabf=nodeplotboot(), ladderize="left", color="Site_layer", label.tips = "Genus", text.size = 2) + ggtitle("Endemic Proteobacteria tree (top 100 ASVs)") + theme(plot.title = element_text(hjust = 0.5))
+pdf("/Volumes/GoogleDrive/My Drive/UCR2019/Mojave_project2019/MojaveCrusts_2019analysis/EndemicSpecies/Bacteria/Figures/Endemic_Proteo_top50.pdf" )
+plot_tree(Heatmap.sitelayer.endemic.proteo, nodelabf=nodeplotboot(), ladderize="left", color="Site_layer", label.tips = "Genus", text.size = 2) + ggtitle("Endemic Proteobacteria tree (top 50 ASVs)") + theme(plot.title = element_text(hjust = 0.5))
 dev.off()
 ```
 
