@@ -1,7 +1,7 @@
 ---
 title: "2019NWanalysis_SF_Fulldataset"
 author: "Nat Pombubpa"
-date: "1/31/2019"
+date: "Updated on February 6, 2019"
 output: html_document
 ---
 
@@ -59,7 +59,6 @@ physeq = phyloseq(OTU,TAX,sampleData)
 physeq
 ```
 
-
 ###STEP9: Remove singletons
 Remove any OTUs that present only one time.
 
@@ -113,6 +112,15 @@ physeq.prune.rarefy = rarefy_even_depth(physeq.prune, sample.size = 76043, repla
 physeq.prune.rarefy
 ```
 
+####Transform data to presence/absence
+```{r}
+physeq.prune.rarefy = transform_sample_counts(physeq.prune.rarefy, function(abund) 1*(abund>0))
+```
+
+```{r}
+physeq.prune.rarefy
+```
+
 agglomerate at Phylum level
 
 ```{r}
@@ -139,7 +147,7 @@ tax_table(ps.taxglom)
 ```{r warning=FALSE}
 #ps.taxglom.prune = prune_taxa(names(sort(taxa_sums(ps.taxglom), TRUE))[1:1000], ps.taxglom)
 set.seed(711L)
-psplotnet = plot_net(ps.taxglom, distance = "bray", type = "taxa", laymeth = "circle", color = "Phylum", point_label ="Phylum", hjust = 0.5) + ggtitle("Biocrust Microbial Community Network Analysis")  + theme(plot.title = element_text(hjust = 0.5))
+psplotnet = plot_net(ps.taxglom, distance = "bray", type = "taxa", laymeth = "circle", color = "Phylum", point_label ="Phylum", hjust = 0.3, maxdist = 0.4) + ggtitle("Biocrust Microbial Community Network Analysis")  + theme(plot.title = element_text(hjust = 0.5))
 
 psplotnet
 ```
@@ -209,7 +217,8 @@ link.visible: plot any of the collumn#3 that similarity is greater than certain 
 for (si in get.all.setor.index()) is used to re-label OTUs name, so they are not on top of each others. (You can try plotting without for (si in get.all.setor.index()) to see how it would look )
 
 ```{r}
-chordDiagram(cdf.w.tax, annotationTrack = "grid", annotationTrackHeight = 0.01, preAllocateTracks = 1, link.visible = cdf.w.tax[[3]] > 0.5)
+chordDiagram(cdf.w.tax, annotationTrack = "grid", annotationTrackHeight = 0.01, preAllocateTracks = 1, link.visible = cdf.w.tax[[3]] > 0.7
+             )
 for(si in get.all.sector.index()) {
     xlim = get.cell.meta.data("xlim", sector.index = si, track.index = 1)
     ylim = get.cell.meta.data("ylim", sector.index = si, track.index = 1)
@@ -219,13 +228,11 @@ for(si in get.all.sector.index()) {
 circos.clear()
 ```
 
-
-
 Save plot to PDF
 
 ```{r}
-pdf("Biocrust Microbial Community Network Analysis (circlize)Jan31SF_allFG&BAC.V2.pdf", width = 18, height = 18)
-chordDiagram(cdf.w.tax, annotationTrack = "grid", annotationTrackHeight = 0.01, preAllocateTracks = 1, link.visible = cdf.w.tax[[3]] > 0.45)
+pdf("Biocrust Microbial Community Network Analysis (circlize)Feb6SF_allFG&BAC.V2.pdf", width = 18, height = 18)
+chordDiagram(cdf.w.tax, annotationTrack = "grid", annotationTrackHeight = 0.01, preAllocateTracks = 1, link.visible = cdf.w.tax[[3]] > 0.7)
 for(si in get.all.sector.index()) {
     xlim = get.cell.meta.data("xlim", sector.index = si, track.index = 1)
     ylim = get.cell.meta.data("ylim", sector.index = si, track.index = 1)
