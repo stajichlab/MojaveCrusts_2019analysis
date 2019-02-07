@@ -71,10 +71,16 @@ physeq.prune
 ```
 
 ```{r}
+physeq.prune.kingdom = tax_glom(physeq.prune, taxrank = "Kingdom")
+tax_table(physeq.prune.kingdom)
+```
+
+```{r}
 physeq.prune = subset_taxa(physeq.prune, Kingdom != "Rhizaria")
 physeq.prune = subset_taxa(physeq.prune, Kingdom != "Chromista")
 physeq.prune = subset_taxa(physeq.prune, Kingdom != "Unassigned")
 physeq.prune = subset_taxa(physeq.prune, Kingdom != "D_0__Eukaryota")
+physeq.prune
 ```
 
 
@@ -114,22 +120,23 @@ physeq.prune.rarefy
 
 ####Transform data to presence/absence
 ```{r}
-physeq.prune.rarefy = transform_sample_counts(physeq.prune.rarefy, function(abund) 1*(abund>0))
+transform.physeq.prune.rarefy = transform_sample_counts(physeq.prune.rarefy, function(abund) 1*(abund>0))
 ```
 
 ```{r}
-physeq.prune.rarefy
+transform.physeq.prune.rarefy
 ```
 
 agglomerate at Phylum level
 
 ```{r}
-ps.taxglom = tax_glom(physeq.prune.rarefy, taxrank="Phylum")
+ps.taxglom = tax_glom(transform.physeq.prune.rarefy, taxrank="Phylum")
 ```
 
 ```{r}
 ps.taxglom
 ```
+
 
 check tax table after agglomeration
 
@@ -137,17 +144,12 @@ check tax table after agglomeration
 head(tax_table(ps.taxglom))
 ```
 
-```{r}
-tax_table(ps.taxglom)
-```
-
-
 ###STEP14:Plot network (Phyloseq)
 
 ```{r warning=FALSE}
-#ps.taxglom.prune = prune_taxa(names(sort(taxa_sums(ps.taxglom), TRUE))[1:1000], ps.taxglom)
+#ps.taxglom.prune = prune_taxa(names(sort(taxa_sums(ps.taxglom), TRUE))[1:10], ps.taxglom)
 set.seed(711L)
-psplotnet = plot_net(ps.taxglom, distance = "bray", type = "taxa", laymeth = "circle", color = "Phylum", point_label ="Phylum", hjust = 0.3, maxdist = 0.4) + ggtitle("Biocrust Microbial Community Network Analysis")  + theme(plot.title = element_text(hjust = 0.5))
+psplotnet = plot_net(ps.taxglom, distance = "bray", type = "taxa", laymeth = "circle", color = "Phylum", point_label ="Phylum", hjust = 0.3, maxdist = 0.3) + ggtitle("Biocrust Microbial Community Network Analysis")  + theme(plot.title = element_text(hjust = 0.5))
 
 psplotnet
 ```
@@ -217,28 +219,360 @@ link.visible: plot any of the collumn#3 that similarity is greater than certain 
 for (si in get.all.setor.index()) is used to re-label OTUs name, so they are not on top of each others. (You can try plotting without for (si in get.all.setor.index()) to see how it would look )
 
 ```{r}
-chordDiagram(cdf.w.tax, annotationTrack = "grid", annotationTrackHeight = 0.01, preAllocateTracks = 1, link.visible = cdf.w.tax[[3]] > 0.7
-             )
+chordDiagram(cdf.w.tax, annotationTrack = "grid", annotationTrackHeight = 0.01, preAllocateTracks = 1, link.visible = cdf.w.tax[[3]] > 0.75) 
 for(si in get.all.sector.index()) {
     xlim = get.cell.meta.data("xlim", sector.index = si, track.index = 1)
     ylim = get.cell.meta.data("ylim", sector.index = si, track.index = 1)
     circos.text(mean(xlim), ylim[1], si, facing = "clockwise", adj = c(-0.1, -0.2),
     niceFacing = TRUE, cex = 1.2, col = "black", sector.index = si, track.index = 1)
-}
+} 
+
 circos.clear()
 ```
 
 Save plot to PDF
 
 ```{r}
-pdf("Biocrust Microbial Community Network Analysis (circlize)Feb6SF_allFG&BAC.V2.pdf", width = 18, height = 18)
-chordDiagram(cdf.w.tax, annotationTrack = "grid", annotationTrackHeight = 0.01, preAllocateTracks = 1, link.visible = cdf.w.tax[[3]] > 0.7)
+pdf("Figures/Biocrust Microbial Community Network Analysis Surface.pdf", width = 18, height = 18)
+chordDiagram(cdf.w.tax, annotationTrack = "grid", annotationTrackHeight = 0.01, preAllocateTracks = 1, link.visible = cdf.w.tax[[3]] > 0.75)
 for(si in get.all.sector.index()) {
     xlim = get.cell.meta.data("xlim", sector.index = si, track.index = 1)
     ylim = get.cell.meta.data("ylim", sector.index = si, track.index = 1)
     circos.text(mean(xlim), ylim[1], si, facing = "clockwise", adj = c(-0.1, -0.2),
     niceFacing = TRUE, cex = 1.2, col = "black", sector.index = si, track.index = 1)
 }
+
+title(main = "Biocrust Microbial Community Network Analysis (Surface)")
 circos.clear()
 dev.off()
 ```
+
+
+
+
+##Network analysis for LAC crust type
+```{r}
+ps.taxglom.LAC = subset_samples(ps.taxglom, Crust_type=="LAC")
+ps.taxglom.LAC
+```
+
+```{r warning=FALSE}
+set.seed(711L)
+psplotnet = plot_net(ps.taxglom.LAC, distance = "bray", type = "taxa", laymeth = "circle", color = "Phylum", point_label ="Phylum", hjust = 0.3, maxdist = 0.25) + ggtitle("Biocrust Microbial Community Network Analysis (LAC-surface")  + theme(plot.title = element_text(hjust = 0.5))
+
+psplotnet
+```
+
+```{r}
+df = psplotnet$data
+df.v1 = data.frame(OTU1 = df$v1, stringsAsFactors = T )
+df.v2 = data.frame(OTU1 = df$v2, stringsAsFactors = T )
+df.v1.v2 = rbind(df.v1,df.v2)
+df.v1.v2
+```
+```{r}
+cdf = data.frame(OTU1 = df$v1, OTU2 = df$v2, Similarity = as.vector(1-df$Distance), stringsAsFactors = TRUE )
+cdf
+```
+
+```{r}
+cdf.w.tax = data.frame(OTU1=tax.circlize[match(cdf$OTU1, tax.circlize$OTU.ID), 3], OTU2=tax.circlize[match(cdf$OTU2, tax.circlize$OTU.ID), 3], Similarity=cdf$Similarity)
+cdf.w.tax
+```
+
+```{r}
+circos.clear()
+```
+
+Plot network from "cdf" data frame that was constructed from Phyloseq plot network
+
+link.visible: plot any of the collumn#3 that similarity is greater than certain number in this case 0.8.
+for (si in get.all.setor.index()) is used to re-label OTUs name, so they are not on top of each others. (You can try plotting without for (si in get.all.setor.index()) to see how it would look )
+
+```{r}
+chordDiagram(cdf.w.tax, annotationTrack = "grid", annotationTrackHeight = 0.01, preAllocateTracks = 1, link.visible = cdf.w.tax[[3]] > 0.8) 
+for(si in get.all.sector.index()) {
+    xlim = get.cell.meta.data("xlim", sector.index = si, track.index = 1)
+    ylim = get.cell.meta.data("ylim", sector.index = si, track.index = 1)
+    circos.text(mean(xlim), ylim[1], si, facing = "clockwise", adj = c(-0.1, -0.2),
+    niceFacing = TRUE, cex = 1.2, col = "black", sector.index = si, track.index = 1)
+} 
+
+circos.clear()
+```
+
+Save plot to PDF
+
+```{r}
+pdf("Figures/Biocrust Microbial Community Network Analysis LAC surface.pdf", width = 18, height = 18)
+chordDiagram(cdf.w.tax, annotationTrack = "grid", annotationTrackHeight = 0.01, preAllocateTracks = 1, link.visible = cdf.w.tax[[3]] > 0.8)
+for(si in get.all.sector.index()) {
+    xlim = get.cell.meta.data("xlim", sector.index = si, track.index = 1)
+    ylim = get.cell.meta.data("ylim", sector.index = si, track.index = 1)
+    circos.text(mean(xlim), ylim[1], si, facing = "clockwise", adj = c(-0.1, -0.2),
+    niceFacing = TRUE, cex = 1.2, col = "black", sector.index = si, track.index = 1)
+}
+
+title(main = "Biocrust Microbial Community Network Analysis (LAC-Surface)")
+circos.clear()
+dev.off()
+```
+
+##Network analysis for CLC crust type
+```{r}
+ps.taxglom.CLC = subset_samples(ps.taxglom, Crust_type=="CLC")
+ps.taxglom.CLC
+```
+
+```{r warning=FALSE}
+set.seed(711L)
+psplotnet = plot_net(ps.taxglom.CLC, distance = "bray", type = "taxa", laymeth = "circle", color = "Phylum", point_label ="Phylum", hjust = 0.3, maxdist = 0.25) + ggtitle("Biocrust Microbial Community Network Analysis (CLC-surface")  + theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+df = psplotnet$data
+df.v1 = data.frame(OTU1 = df$v1, stringsAsFactors = T )
+df.v2 = data.frame(OTU1 = df$v2, stringsAsFactors = T )
+df.v1.v2 = rbind(df.v1,df.v2)
+```
+
+```{r}
+cdf = data.frame(OTU1 = df$v1, OTU2 = df$v2, Similarity = as.vector(1-df$Distance), stringsAsFactors = TRUE )
+```
+
+```{r}
+cdf.w.tax = data.frame(OTU1=tax.circlize[match(cdf$OTU1, tax.circlize$OTU.ID), 3], OTU2=tax.circlize[match(cdf$OTU2, tax.circlize$OTU.ID), 3], Similarity=cdf$Similarity)
+```
+
+```{r}
+circos.clear()
+```
+
+Plot network from "cdf" data frame that was constructed from Phyloseq plot network
+
+link.visible: plot any of the collumn#3 that similarity is greater than certain number in this case 0.8.
+for (si in get.all.setor.index()) is used to re-label OTUs name, so they are not on top of each others. (You can try plotting without for (si in get.all.setor.index()) to see how it would look )
+
+```{r}
+chordDiagram(cdf.w.tax, annotationTrack = "grid", annotationTrackHeight = 0.01, preAllocateTracks = 1, link.visible = cdf.w.tax[[3]] > 0.8) 
+for(si in get.all.sector.index()) {
+    xlim = get.cell.meta.data("xlim", sector.index = si, track.index = 1)
+    ylim = get.cell.meta.data("ylim", sector.index = si, track.index = 1)
+    circos.text(mean(xlim), ylim[1], si, facing = "clockwise", adj = c(-0.1, -0.2),
+    niceFacing = TRUE, cex = 1.2, col = "black", sector.index = si, track.index = 1)
+} 
+
+circos.clear()
+```
+
+Save plot to PDF
+
+```{r}
+pdf("Figures/Biocrust Microbial Community Network Analysis CLC surface.pdf", width = 18, height = 18)
+chordDiagram(cdf.w.tax, annotationTrack = "grid", annotationTrackHeight = 0.01, preAllocateTracks = 1, link.visible = cdf.w.tax[[3]] > 0.8)
+for(si in get.all.sector.index()) {
+    xlim = get.cell.meta.data("xlim", sector.index = si, track.index = 1)
+    ylim = get.cell.meta.data("ylim", sector.index = si, track.index = 1)
+    circos.text(mean(xlim), ylim[1], si, facing = "clockwise", adj = c(-0.1, -0.2),
+    niceFacing = TRUE, cex = 1.2, col = "black", sector.index = si, track.index = 1)
+}
+
+title(main = "Biocrust Microbial Community Network Analysis (CLC-Surface)")
+circos.clear()
+dev.off()
+```
+
+##Network analysis for GLC crust type
+```{r}
+ps.taxglom.GLC = subset_samples(ps.taxglom, Crust_type=="GLC")
+ps.taxglom.GLC
+```
+
+```{r warning=FALSE}
+set.seed(711L)
+psplotnet = plot_net(ps.taxglom.GLC, distance = "bray", type = "taxa", laymeth = "circle", color = "Phylum", point_label ="Phylum", hjust = 0.3, maxdist = 0.25) + ggtitle("Biocrust Microbial Community Network Analysis (CLC-surface")  + theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+df = psplotnet$data
+df.v1 = data.frame(OTU1 = df$v1, stringsAsFactors = T )
+df.v2 = data.frame(OTU1 = df$v2, stringsAsFactors = T )
+df.v1.v2 = rbind(df.v1,df.v2)
+```
+
+```{r}
+cdf = data.frame(OTU1 = df$v1, OTU2 = df$v2, Similarity = as.vector(1-df$Distance), stringsAsFactors = TRUE )
+```
+
+```{r}
+cdf.w.tax = data.frame(OTU1=tax.circlize[match(cdf$OTU1, tax.circlize$OTU.ID), 3], OTU2=tax.circlize[match(cdf$OTU2, tax.circlize$OTU.ID), 3], Similarity=cdf$Similarity)
+```
+
+```{r}
+circos.clear()
+```
+
+Plot network from "cdf" data frame that was constructed from Phyloseq plot network
+
+link.visible: plot any of the collumn#3 that similarity is greater than certain number in this case 0.8.
+for (si in get.all.setor.index()) is used to re-label OTUs name, so they are not on top of each others. (You can try plotting without for (si in get.all.setor.index()) to see how it would look )
+
+```{r}
+chordDiagram(cdf.w.tax, annotationTrack = "grid", annotationTrackHeight = 0.01, preAllocateTracks = 1, link.visible = cdf.w.tax[[3]] > 0.8) 
+for(si in get.all.sector.index()) {
+    xlim = get.cell.meta.data("xlim", sector.index = si, track.index = 1)
+    ylim = get.cell.meta.data("ylim", sector.index = si, track.index = 1)
+    circos.text(mean(xlim), ylim[1], si, facing = "clockwise", adj = c(-0.1, -0.2),
+    niceFacing = TRUE, cex = 1.2, col = "black", sector.index = si, track.index = 1)
+} 
+
+circos.clear()
+```
+
+Save plot to PDF
+
+```{r}
+pdf("Figures/Biocrust Microbial Community Network Analysis GLC surface.pdf", width = 18, height = 18)
+chordDiagram(cdf.w.tax, annotationTrack = "grid", annotationTrackHeight = 0.01, preAllocateTracks = 1, link.visible = cdf.w.tax[[3]] > 0.8)
+for(si in get.all.sector.index()) {
+    xlim = get.cell.meta.data("xlim", sector.index = si, track.index = 1)
+    ylim = get.cell.meta.data("ylim", sector.index = si, track.index = 1)
+    circos.text(mean(xlim), ylim[1], si, facing = "clockwise", adj = c(-0.1, -0.2),
+    niceFacing = TRUE, cex = 1.2, col = "black", sector.index = si, track.index = 1)
+}
+
+title(main = "Biocrust Microbial Community Network Analysis (GLC-Surface)")
+circos.clear()
+dev.off()
+```
+
+##Network analysis for SMC crust type
+```{r}
+ps.taxglom.SMC = subset_samples(ps.taxglom, Crust_type=="SMC")
+ps.taxglom.SMC
+```
+
+```{r warning=FALSE}
+set.seed(711L)
+psplotnet = plot_net(ps.taxglom.SMC, distance = "bray", type = "taxa", laymeth = "circle", color = "Phylum", point_label ="Phylum", hjust = 0.3, maxdist = 0.25) + ggtitle("Biocrust Microbial Community Network Analysis (CLC-surface")  + theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+df = psplotnet$data
+df.v1 = data.frame(OTU1 = df$v1, stringsAsFactors = T )
+df.v2 = data.frame(OTU1 = df$v2, stringsAsFactors = T )
+df.v1.v2 = rbind(df.v1,df.v2)
+```
+
+```{r}
+cdf = data.frame(OTU1 = df$v1, OTU2 = df$v2, Similarity = as.vector(1-df$Distance), stringsAsFactors = TRUE )
+```
+
+```{r}
+cdf.w.tax = data.frame(OTU1=tax.circlize[match(cdf$OTU1, tax.circlize$OTU.ID), 3], OTU2=tax.circlize[match(cdf$OTU2, tax.circlize$OTU.ID), 3], Similarity=cdf$Similarity)
+```
+
+```{r}
+circos.clear()
+```
+
+Plot network from "cdf" data frame that was constructed from Phyloseq plot network
+
+link.visible: plot any of the collumn#3 that similarity is greater than certain number in this case 0.8.
+for (si in get.all.setor.index()) is used to re-label OTUs name, so they are not on top of each others. (You can try plotting without for (si in get.all.setor.index()) to see how it would look )
+
+```{r}
+chordDiagram(cdf.w.tax, annotationTrack = "grid", annotationTrackHeight = 0.01, preAllocateTracks = 1, link.visible = cdf.w.tax[[3]] > 0.8) 
+for(si in get.all.sector.index()) {
+    xlim = get.cell.meta.data("xlim", sector.index = si, track.index = 1)
+    ylim = get.cell.meta.data("ylim", sector.index = si, track.index = 1)
+    circos.text(mean(xlim), ylim[1], si, facing = "clockwise", adj = c(-0.1, -0.2),
+    niceFacing = TRUE, cex = 1.2, col = "black", sector.index = si, track.index = 1)
+} 
+
+circos.clear()
+```
+
+Save plot to PDF
+
+```{r}
+pdf("Figures/Biocrust Microbial Community Network Analysis SMC surface.pdf", width = 18, height = 18)
+chordDiagram(cdf.w.tax, annotationTrack = "grid", annotationTrackHeight = 0.01, preAllocateTracks = 1, link.visible = cdf.w.tax[[3]] > 0.8)
+for(si in get.all.sector.index()) {
+    xlim = get.cell.meta.data("xlim", sector.index = si, track.index = 1)
+    ylim = get.cell.meta.data("ylim", sector.index = si, track.index = 1)
+    circos.text(mean(xlim), ylim[1], si, facing = "clockwise", adj = c(-0.1, -0.2),
+    niceFacing = TRUE, cex = 1.2, col = "black", sector.index = si, track.index = 1)
+}
+
+title(main = "Biocrust Microbial Community Network Analysis (SMC-Surface)")
+circos.clear()
+dev.off()
+```
+
+##Network analysis for RMC crust type
+```{r}
+ps.taxglom.RMC = subset_samples(ps.taxglom, Crust_type=="RMC")
+ps.taxglom.RMC
+```
+
+```{r warning=FALSE}
+set.seed(711L)
+psplotnet = plot_net(ps.taxglom.RMC, distance = "bray", type = "taxa", laymeth = "circle", color = "Phylum", point_label ="Phylum", hjust = 0.3, maxdist = 0.25) + ggtitle("Biocrust Microbial Community Network Analysis (CLC-surface")  + theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+df = psplotnet$data
+df.v1 = data.frame(OTU1 = df$v1, stringsAsFactors = T )
+df.v2 = data.frame(OTU1 = df$v2, stringsAsFactors = T )
+df.v1.v2 = rbind(df.v1,df.v2)
+```
+
+```{r}
+cdf = data.frame(OTU1 = df$v1, OTU2 = df$v2, Similarity = as.vector(1-df$Distance), stringsAsFactors = TRUE )
+```
+
+```{r}
+cdf.w.tax = data.frame(OTU1=tax.circlize[match(cdf$OTU1, tax.circlize$OTU.ID), 3], OTU2=tax.circlize[match(cdf$OTU2, tax.circlize$OTU.ID), 3], Similarity=cdf$Similarity)
+```
+
+```{r}
+circos.clear()
+```
+
+Plot network from "cdf" data frame that was constructed from Phyloseq plot network
+
+link.visible: plot any of the collumn#3 that similarity is greater than certain number in this case 0.8.
+for (si in get.all.setor.index()) is used to re-label OTUs name, so they are not on top of each others. (You can try plotting without for (si in get.all.setor.index()) to see how it would look )
+
+```{r}
+chordDiagram(cdf.w.tax, annotationTrack = "grid", annotationTrackHeight = 0.01, preAllocateTracks = 1, link.visible = cdf.w.tax[[3]] > 0.8) 
+for(si in get.all.sector.index()) {
+    xlim = get.cell.meta.data("xlim", sector.index = si, track.index = 1)
+    ylim = get.cell.meta.data("ylim", sector.index = si, track.index = 1)
+    circos.text(mean(xlim), ylim[1], si, facing = "clockwise", adj = c(-0.1, -0.2),
+    niceFacing = TRUE, cex = 1.2, col = "black", sector.index = si, track.index = 1)
+} 
+
+circos.clear()
+```
+
+Save plot to PDF
+
+```{r}
+pdf("Figures/Biocrust Microbial Community Network Analysis RMC surface.pdf", width = 18, height = 18)
+chordDiagram(cdf.w.tax, annotationTrack = "grid", annotationTrackHeight = 0.01, preAllocateTracks = 1, link.visible = cdf.w.tax[[3]] > 0.8)
+for(si in get.all.sector.index()) {
+    xlim = get.cell.meta.data("xlim", sector.index = si, track.index = 1)
+    ylim = get.cell.meta.data("ylim", sector.index = si, track.index = 1)
+    circos.text(mean(xlim), ylim[1], si, facing = "clockwise", adj = c(-0.1, -0.2),
+    niceFacing = TRUE, cex = 1.2, col = "black", sector.index = si, track.index = 1)
+}
+
+title(main = "Biocrust Microbial Community Network Analysis (RMC-Surface)")
+circos.clear()
+dev.off()
+```
+
+
+
