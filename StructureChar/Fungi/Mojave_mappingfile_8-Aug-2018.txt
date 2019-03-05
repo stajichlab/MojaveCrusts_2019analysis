@@ -1,0 +1,109 @@
+SampleID	Locus	Flowcell	Site	Site_layer	Layer	Soil_type	Soil_type_layer	Crust_type	Sampling_month	Sampling_Date	Description
+n16S.NPMarch1SF.	16S	FC761	JTNP	JTNP_SF	Surface	Granite	Granite_SF	CLC	March_2017	3/31/17	KEEP
+n16S.NPMarch1Sub.	16S	FC761	JTNP	JTNP_Sub	Subsurface	Granite	Granite_Sub	CLC.Sub	March_2017	3/31/17	SKIP
+n16S.NPMarch2SF.	16S	FC761	JTNP	JTNP_SF	Surface	Granite	Granite_SF	LAC	March_2017	3/31/17	KEEP
+n16S.NPMarch2Sub.	16S	FC761	JTNP	JTNP_Sub	Subsurface	Granite	Granite_Sub	LAC.Sub	March_2017	3/31/17	SKIP
+n16S.NPMarch3SF.	16S	FC761	JTNP	JTNP_SF	Surface	Granite	Granite_SF	CLC	March_2017	3/31/17	KEEP
+n16S.NPMarch3Sub.	16S	FC761	JTNP	JTNP_Sub	Subsurface	Granite	Granite_Sub	CLC.Sub	March_2017	3/31/17	SKIP
+n16S.NPMarch4SF.	16S	FC761	JTNP	JTNP_SF	Surface	Granite	Granite_SF	LAC	March_2017	3/31/17	KEEP
+n16S.NPMarch4Sub.	16S	FC761	JTNP	JTNP_Sub	Subsurface	Granite	Granite_Sub	LAC.Sub	March_2017	3/31/17	SKIP
+n16S.NPMarch5SF.	16S	FC761	JTNP	JTNP_SF	Surface	Granite	Granite_SF	GLC	March_2017	3/31/17	KEEP
+n16S.NPMarch5Sub.	16S	FC761	JTNP	JTNP_Sub	Subsurface	Granite	Granite_Sub	GLC.Sub	March_2017	3/31/17	SKIP
+n16S.NPMarch6SF.	16S	FC761	JTNP	JTNP_SF	Surface	Granite	Granite_SF	CLC	March_2017	3/31/17	KEEP
+n16S.NPMarch6Sub.	16S	FC761	JTNP	JTNP_Sub	Subsurface	Granite	Granite_Sub	CLC.Sub	March_2017	3/31/17	SKIP
+n16S.NPMarch7SF.	16S	FC761	JTNP	JTNP_SF	Surface	Granite	Granite_SF	LAC	March_2017	3/31/17	KEEP
+n16S.NPMarch7Sub.	16S	FC761	JTNP	JTNP_Sub	Subsurface	Granite	Granite_Sub	LAC.Sub	March_2017	3/31/17	SKIP
+n16S.NPMarch8SF.	16S	FC761	JTNP	JTNP_SF	Surface	Granite	Granite_SF	GLC	March_2017	3/31/17	KEEP
+n16S.NPMarch8Sub.	16S	FC761	JTNP	JTNP_Sub	Subsurface	Granite	Granite_Sub	GLC.Sub	March_2017	3/31/17	SKIP
+n16S.NPMarch9SF.	16S	FC761	JTNP	JTNP_SF	Surface	Granite	Granite_SF	GLC	March_2017	3/31/17	KEEP
+n16S.NPMarch9Sub.	16S	FC761	JTNP	JTNP_Sub	Subsurface	Granite	Granite_Sub	GLC.Sub	March_2017	3/31/17	SKIP
+n16S.CIMA.LAC.	16S	FC761	CIMA	CIMA_SF	Surface	Volcanic	Volcanic_SF	LAC	March_2015	3/16/15	KEEP
+n16S.CIMA.CLC.	16S	FC761	CIMA	CIMA_SF	Surface	Volcanic	Volcanic_SF	CLC	March_2015	3/16/15	KEEP
+n16S.CIMA.GLC.	16S	FC761	CIMA	CIMA_SF	Surface	Volcanic	Volcanic_SF	GLC	March_2016	3/11/16	KEEP
+n16S.CIMA.SMC.	16S	FC761	CIMA	CIMA_SF	Surface	Volcanic	Volcanic_SF	SMC	March_2015	3/16/15	KEEP
+n16S.CIMA.RMC.	16S	FC761	CIMA	CIMA_SF	Surface	Volcanic	Volcanic_SF	RMC	March_2015	3/16/15	KEEP
+n16S.KELSO.LAC.	16S	FC761	KELSO	KELSO_SF	Surface	Sand	Sand_SF	LAC	March_2015	3/16/15	KEEP
+n16S.KELSO.CLC.	16S	FC761	KELSO	KELSO_SF	Surface	Sand	Sand_SF	CLC	March_2015	3/16/15	KEEP
+n16S.KELSO.GLC.	16S	FC761	KELSO	KELSO_SF	Surface	Sand	Sand_SF	GLC	March_2015	3/16/15	KEEP
+n16S.KELSO.SMC.	16S	FC761	KELSO	KELSO_SF	Surface	Sand	Sand_SF	SMC	March_2015	3/16/15	KEEP
+n16S.KELSO.RMC.	16S	FC761	KELSO	KELSO_SF	Surface	Sand	Sand_SF	RMC	March_2015	3/16/15	KEEP
+n16S.GMT.LAC.	16S	FC761	GMT	GMT_SF	Surface	Granite	Granite_SF	LAC	March_2015	3/16/15	KEEP
+n16S.GMT.CLC.	16S	FC761	GMT	GMT_SF	Surface	Granite	Granite_SF	CLC	August_2015	8/6/15	KEEP
+n16S.GMT.GLC.	16S	FC761	GMT	GMT_SF	Surface	Granite	Granite_SF	GLC	March_2015	3/16/15	KEEP
+n16S.GMT.SMC.	16S	FC761	GMT	GMT_SF	Surface	Granite	Granite_SF	SMC	March_2015	3/16/15	KEEP
+n16S.GMT.RMC.	16S	FC761	GMT	GMT_SF	Surface	Granite	Granite_SF	RMC	March_2015	3/16/15	KEEP
+n16S.PD.1	16S	FC442	GMT	GMT				CLC			SKIP
+n16S.PD.2	16S	FC442	GMT	GMT				CLC.Sub			SKIP
+n16S.PD.3	16S	FC442	GMT	GMT				GLC			SKIP
+n16S.PD.4	16S	FC442	GMT	GMT				GLC.Sub			SKIP
+n16S.PD.5	16S	FC442	GMT	GMT				LAC			SKIP
+n16S.PD.6	16S	FC442	GMT	GMT				LAC.Sub			SKIP
+n16S.PD.7	16S	FC442	KELSO	KELSO				CLC			SKIP
+n16S.PD.8	16S	FC442	KELSO	KELSO				CLC.Sub			SKIP
+n16S.PD.9	16S	FC442	KELSO	KELSO				GLC			SKIP
+n16S.PD.10	16S	FC442	KELSO	KELSO				GLC.Sub			SKIP
+n16S.PD.11	16S	FC442	KELSO	KELSO				LAC			SKIP
+n16S.PD.12	16S	FC442	KELSO	KELSO				LAC.Sub			SKIP
+CIMA.CLC.SUB	16S		CIMA	CIMA_Sub	Subsurface	Volcanic	Volcanic_Sub	CLC.Sub			
+CIMA.GLC.SUB	16S		CIMA	CIMA_Sub	Subsurface	Volcanic	Volcanic_Sub	GLC.Sub			
+CIMA.LAC.SUB	16S		CIMA	CIMA_Sub	Subsurface	Volcanic	Volcanic_Sub	LAC.Sub			
+CIMA.RMC.SUB	16S		CIMA	CIMA_Sub	Subsurface	Volcanic	Volcanic_Sub	RMC.Sub			
+CIMA.SMC.SUB	16S		CIMA	CIMA_Sub	Subsurface	Volcanic	Volcanic_Sub	SMC.Sub			
+GMT.CLC.SUB	16S		GMT	GMT_Sub	Subsurface	Sand	Sand_Sub	CLC.Sub			
+GMT.GLC.SUB	16S		GMT	GMT_Sub	Subsurface	Sand	Sand_Sub	GLC.Sub			
+GMT.LAC.SUB	16S		GMT	GMT_Sub	Subsurface	Sand	Sand_Sub	LAC.Sub			
+GMT.RMC.SUB	16S		GMT	GMT_Sub	Subsurface	Sand	Sand_Sub	RMC.Sub			
+GMT.SMC.SUB	16S		GMT	GMT_Sub	Subsurface	Sand	Sand_Sub	SMC.Sub			
+KELSO.CLC.SUB	16S		KELSO	KELSO_Sub	Subsurface	Granite	Granite_Sub	CLC.Sub			
+KELSO.GLC.SUB	16S		KELSO	KELSO_Sub	Subsurface	Granite	Granite_Sub	GLC.Sub			
+KELSO.LAC.SUB	16S		KELSO	KELSO_Sub	Subsurface	Granite	Granite_Sub	LAC.Sub			
+KELSO.RMC.SUB	16S		KELSO	KELSO_Sub	Subsurface	Granite	Granite_Sub	RMC.Sub			
+KELSO.SMC.SUB	16S		KELSO	KELSO_Sub	Subsurface	Granite	Granite_Sub	SMC.Sub			
+NPMarch1SF.	ITS	TBD	JTNP	JTNP_SF	Surface	Granite	Granite_SF	CLC	March_2017	3/31/17	
+NPMarch1Sub.	ITS	TBD	JTNP	JTNP_Sub	Subsurface	Granite	Granite_Sub	CLC.Sub	March_2017	3/31/17	
+NPMarch2SF.	ITS	TBD	JTNP	JTNP_SF	Surface	Granite	Granite_SF	LAC	March_2017	3/31/17	
+NPMarch2Sub.	ITS	TBD	JTNP	JTNP_Sub	Subsurface	Granite	Granite_Sub	LAC.Sub	March_2017	3/31/17	
+NPMarch3SF.	ITS	TBD	JTNP	JTNP_SF	Surface	Granite	Granite_SF	CLC	March_2017	3/31/17	
+NPMarch3Sub.	ITS	TBD	JTNP	JTNP_Sub	Subsurface	Granite	Granite_Sub	CLC.Sub	March_2017	3/31/17	
+NPMarch4SF.	ITS	TBD	JTNP	JTNP_SF	Surface	Granite	Granite_SF	LAC	March_2017	3/31/17	
+NPMarch4Sub.	ITS	TBD	JTNP	JTNP_Sub	Subsurface	Granite	Granite_Sub	LAC.Sub	March_2017	3/31/17	
+NPMarch5SF.	ITS	TBD	JTNP	JTNP_SF	Surface	Granite	Granite_SF	GLC	March_2017	3/31/17	
+NPMarch5Sub.	ITS	TBD	JTNP	JTNP_Sub	Subsurface	Granite	Granite_Sub	GLC.Sub	March_2017	3/31/17	
+NPMarch6SF.	ITS	TBD	JTNP	JTNP_SF	Surface	Granite	Granite_SF	CLC	March_2017	3/31/17	
+NPMarch6Sub.	ITS	TBD	JTNP	JTNP_Sub	Subsurface	Granite	Granite_Sub	CLC.Sub	March_2017	3/31/17	
+NPMarch7SF.	ITS	TBD	JTNP	JTNP_SF	Surface	Granite	Granite_SF	LAC	March_2017	3/31/17	
+NPMarch7Sub.	ITS	TBD	JTNP	JTNP_Sub	Subsurface	Granite	Granite_Sub	LAC.Sub	March_2017	3/31/17	
+NPMarch8SF.	ITS	TBD	JTNP	JTNP_SF	Surface	Granite	Granite_SF	GLC	March_2017	3/31/17	
+NPMarch8Sub.	ITS	TBD	JTNP	JTNP_Sub	Subsurface	Granite	Granite_Sub	GLC.Sub	March_2017	3/31/17	
+NPMarch9SF.	ITS	TBD	JTNP	JTNP_SF	Surface	Granite	Granite_SF	GLC	March_2017	3/31/17	
+NPMarch9Sub.	ITS	TBD	JTNP	JTNP_Sub	Subsurface	Granite	Granite_Sub	GLC.Sub	March_2017	3/31/17	
+CIMA.LAC.	ITS	TBD	CIMA	CIMA_SF	Surface	Volcanic	Volcanic_SF	LAC	March_2015	3/16/15	
+CIMA.CLC.	ITS	TBD	CIMA	CIMA_SF	Surface	Volcanic	Volcanic_SF	CLC	March_2015	3/16/15	
+CIMA.GLC.	ITS	TBD	CIMA	CIMA_SF	Surface	Volcanic	Volcanic_SF	GLC	March_2016	3/11/16	
+CIMA.SMC.	ITS	TBD	CIMA	CIMA_SF	Surface	Volcanic	Volcanic_SF	SMC	March_2015	3/16/15	
+CIMA.RMC.	ITS	TBD	CIMA	CIMA_SF	Surface	Volcanic	Volcanic_SF	RMC	March_2015	3/16/15	
+KELSO.LAC.	ITS	TBD	KELSO	KELSO_SF	Surface	Sand	Sand_SF	LAC	March_2015	3/16/15	
+KELSO.CLC.	ITS	TBD	KELSO	KELSO_SF	Surface	Sand	Sand_SF	CLC	March_2015	3/16/15	
+KELSO.GLC.	ITS	TBD	KELSO	KELSO_SF	Surface	Sand	Sand_SF	GLC	March_2015	3/16/15	
+KELSO.SMC.	ITS	TBD	KELSO	KELSO_SF	Surface	Sand	Sand_SF	SMC	March_2015	3/16/15	
+KELSO.RMC.	ITS	TBD	KELSO	KELSO_SF	Surface	Sand	Sand_SF	RMC	March_2015	3/16/15	
+GMT.LAC.	ITS	TBD	GMT	GMT_SF	Surface	Granite	Granite_SF	LAC	March_2015	3/16/15	
+GMT.CLC.	ITS	TBD	GMT	GMT_SF	Surface	Granite	Granite_SF	CLC	August_2015	8/6/15	
+GMT.GLC.	ITS	TBD	GMT	GMT_SF	Surface	Granite	Granite_SF	GLC	March_2015	3/16/15	
+GMT.SMC.	ITS	TBD	GMT	GMT_SF	Surface	Granite	Granite_SF	SMC	March_2015	3/16/15	
+GMT.RMC.	ITS	TBD	GMT	GMT_SF	Surface	Granite	Granite_SF	RMC	March_2015	3/16/15	
+CIMA.CLC.SUB.	ITS		CIMA	CIMA_Sub	Subsurface	Volcanic	Volcanic_Sub	CLC.Sub			
+CIMA.GLC.SUB.	ITS		CIMA	CIMA_Sub	Subsurface	Volcanic	Volcanic_Sub	GLC.Sub			
+CIMA.LAC.SUB.	ITS		CIMA	CIMA_Sub	Subsurface	Volcanic	Volcanic_Sub	LAC.Sub			
+CIMA.RMC.SUB.	ITS		CIMA	CIMA_Sub	Subsurface	Volcanic	Volcanic_Sub	RMC.Sub			
+CIMA.SMC.SUB.	ITS		CIMA	CIMA_Sub	Subsurface	Volcanic	Volcanic_Sub	SMC.Sub			
+GMT.CLC.SUB.	ITS		GMT	GMT_Sub	Subsurface	Sand	Sand_SF	CLC.Sub			
+GMT.GLC.SUB.	ITS		GMT	GMT_Sub	Subsurface	Sand	Sand_SF	GLC.Sub			
+GMT.LAC.SUB.	ITS		GMT	GMT_Sub	Subsurface	Sand	Sand_SF	LAC.Sub			
+GMT.RMC.SUB.	ITS		GMT	GMT_Sub	Subsurface	Sand	Sand_SF	RMC.Sub			
+GMT.SMC.SUB.	ITS		GMT	GMT_Sub	Subsurface	Sand	Sand_SF	SMC.Sub			
+KELSO.CLC.SUB.	ITS		KELSO	KELSO_Sub	Subsurface	Granite	Granite_Sub	CLC.Sub			
+KELSO.GLC.SUB.	ITS		KELSO	KELSO_Sub	Subsurface	Granite	Granite_Sub	GLC.Sub			
+KELSO.LAC.SUB.	ITS		KELSO	KELSO_Sub	Subsurface	Granite	Granite_Sub	LAC.Sub			
+KELSO.RMC.SUB.	ITS		KELSO	KELSO_Sub	Subsurface	Granite	Granite_Sub	RMC.Sub			
+KELSO.SMC.SUB.	ITS		KELSO	KELSO_Sub	Subsurface	Granite	Granite_Sub	SMC.Sub			
