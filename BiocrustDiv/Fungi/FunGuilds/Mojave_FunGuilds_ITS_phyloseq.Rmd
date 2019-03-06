@@ -1,0 +1,329 @@
+---
+title: "Mojave_FunGuilds_ITS_phyloseq"
+author: "Nat Pombubpa"
+date: "Updated on March 6, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+###STEP1: Load all necessary packages for analysis
+More information about Phyloseq can be found at the following link: [Phyloseq](https://joey711.github.io/phyloseq/)
+If you get error in this step, you probably need to install any packages which causes error.
+
+```{r warning=FALSE, message=FALSE}
+library(ape)
+library(vegan)
+library(dplyr)
+library(scales)
+library(grid)
+library(reshape2)
+library(phyloseq)
+library(magrittr)
+library(ggplot2)
+library(ggpubr)
+library(plyr)
+library(data.table)
+library(tidyr)
+library(tidyverse)
+```
+
+
+###STEP2: Import Mapping file (metadate file)
+1.Check mapping file before import to R, R doesn’t seem to like sample name to start with number or contain “-” in sample name. If you get error in this step, you should check file name first.
+
+2.First column of first row should not start with #, R will not read the first row that starts with #
+
+3. You can choose which samples to include in analysis by indicating "KEEP" in Description column
+
+```{r}
+meta = read.table("Mojave_mappingfile_8-Aug-2018.txt",header=TRUE,row.names=1,sep="\t",stringsAsFactors=FALSE)
+```
+
+If need to keep or remove some samples
+```{r}
+#meta <- meta[which(meta$Layer %in% c("Surface")),]
+```
+
+###STEP3: Check if your metadata file has been import successfully and correctly
+
+The output will show a table of your metadata file (mapping file).
+
+*If you do not have header, you might start your first row with #
+
+```{r warning=FALSE}
+head(meta)
+```
+
+###STEP4: Construct sample_data-class using imported metadata
+
+```{r}
+sampleData <- sample_data(meta)
+```
+
+###STEP5: Import OTU table
+
+```{r}
+FG <- read.table("FGoriginalcopy.txt",header=T,sep="\t",row.names=1)
+FGotus <- select(FG, -(Taxonomy:Citation.Source))
+FGotumat <- as(as.matrix(FGotus), "matrix")
+FGOTU = otu_table(FGotumat, taxa_are_rows = TRUE)
+```
+
+Check imported OTU table
+
+```{r warning=FALSE}
+head(FGOTU)
+```
+
+###STEP6: Import FunGuilds taxonomy table
+
+```{r}
+FGtaxmat <- select(FG, Confidence.Ranking, Trophic.Mode, Guild, Growth.Morphology)
+FGtaxmat <- as(as.matrix(FGtaxmat),"matrix")
+FGTAX = tax_table(FGtaxmat)
+```
+
+###STEP8: Construct Phyloseq object
+To construct phyloseq object, otu table, taxonomy table, and sampleData are required. Phylogenetic tree can be included, but it is not necessary for constructing phyloseq object.
+Construct Phyloseq object called "Physeq"
+
+```{r warning=FALSE}
+physeq = phyloseq(FGOTU,FGTAX,sampleData)
+```
+
+Check phyloseq object
+This should indicate that your physeq is a "phyloseq-class experiment-level object""
+
+```{r warning=FALSE}
+physeq
+```
+
+###STEP9: Remove singletons
+Remove any OTUs that present only one time.
+
+```{r }
+physeq.prune = prune_taxa(taxa_sums(physeq) > 10, physeq)
+```
+
+```{r warning=FALSE}
+physeq.prune
+```
+
+###STEP10: Plot read counts to check dataset
+Check read counts: any samples that have very low reads should be removed.
+[Ref](http://evomics.org/wp-content/uploads/2016/01/phyloseq-Lab-01-Answers.html)
+
+```{r}
+readcount = data.table(as(sample_data(physeq.prune), "data.frame"),
+                 TotalReads = sample_sums(physeq.prune), 
+                 keep.rownames = TRUE)
+setnames(readcount, "rn", "SampleID")
+
+#For plotting, use command below.
+#SeqDepth = ggplot(readcount, aes(TotalReads)) + geom_histogram() + ggtitle("Sequencing Depth")
+```
+
+TotalReads of all the samples can be in this table (select only SampleID and TotalReads columns).
+In order to check samples with low number of reads, "order()" can be used to sort "TotalReads" column.
+In this dataset, N55.Rhizo has very low number of reads, so will will filter this sample out using the next minimum number of reads.
+```{r}
+readcount = readcount[order(readcount$TotalReads), c("SampleID", "TotalReads")]
+```
+
+```{r}
+head(readcount)
+```
+
+```{r warning=FALSE}
+set.seed(1)
+physeq.prune.rarefy = rarefy_even_depth(physeq.prune, sample.size = 6664, replace = FALSE, trimOTUs = FALSE)
+physeq.prune.rarefy
+```
+
+```{r}
+physeq.prune.rarefy.nopossible = subset_taxa(physeq.prune.rarefy, Confidence.Ranking="Highly Possible")
+#physeq.prune.rarefy.nopossible = subset_taxa(physeq.prune.rarefy.nopossible, Confidence.Ranking!="-")
+physeq.prune.rarefy.nopossible = subset_taxa(physeq.prune.rarefy.nopossible, Trophic.Mode!="-")
+#fgps.prune.confidence2 = subset_taxa(fgps.prune.confidence1, Confidence.Ranking!="Probable")
+#fgps.prune.no.na = subset_taxa(fgps.prune.confidence1, Trophic.Mode!="-")
+#fgps.prune.no.null = subset_taxa(fgps.prune.no.na, Guild!="NULL")
+```
+
+```{r}
+physeq.prune.rarefy.nopossible
+```
+
+
+###STEP11.3: Plotting alpha diversity for each Guild
+Subset fungal OTUs by class
+
+```{r}
+FungiGuild = as.character(get_taxa_unique(physeq.prune.rarefy.nopossible, "Guild"))
+FungiGuild = FungiGuild[complete.cases(FungiGuild)]
+```
+
+Save pdf of plot_richness results for each fungal class in the loop which go through FungiClass
+Note: following code plot alpha diversity by Site and Layer
+```{r}
+pdf("./Figures/Fungal Guilds Alpha Diversity (Observed) by Site and Layer.pdf", width = 8, height = 5 )
+for (i in FungiGuild) {
+  APS = subset_taxa(physeq.prune.rarefy.nopossible, Guild == i)
+  APS.plot = plot_richness(APS, x="Site_layer", color =("Site_layer"), measures=c("Observed")) + geom_boxplot() + ggtitle(i) + stat_compare_means(method = "anova") + theme(plot.title = element_text(hjust = 0.5))
+  print(APS.plot)
+}
+dev.off()
+```
+
+Save pdf of plot_richness results for each fungal class in the loop which go through FungiClass
+Note: following code plot alpha diversity by Crust type
+
+```{r}
+pdf("./Figures/Fungal Guild Alpha Diversity (Observed) by Crust type.pdf", width = 8, height = 5 )
+for (i in FungiGuild) {
+  APS = subset_taxa(physeq.prune.rarefy.nopossible, Guild == i)
+  APS.plot = plot_richness(APS, x="Crust_type", color =("Crust_type"), measures=c("Observed")) + geom_boxplot() + ggtitle(i) + stat_compare_means(method = "anova") + theme(plot.title = element_text(hjust = 0.5))
+  print(APS.plot)
+}
+dev.off()
+```
+
+###STEP11.4: Plotting alpha diversity for each Trophic.Mode
+Subset fungal OTUs by class
+
+```{r}
+FungiGuild = as.character(get_taxa_unique(physeq.prune.rarefy.nopossible, "Trophic.Mode"))
+FungiGuild = FungiGuild[complete.cases(FungiGuild)]
+```
+
+Save pdf of plot_richness results for each fungal class in the loop which go through FungiClass
+Note: following code plot alpha diversity by Site and Layer
+```{r}
+pdf("./Figures/Fungal Trophic.Mode Alpha Diversity (Observed) by Site and Layer.pdf", width = 8, height = 5 )
+for (i in FungiGuild) {
+  APS = subset_taxa(physeq.prune.rarefy.nopossible, Trophic.Mode == i)
+  APS.plot = plot_richness(APS, x="Site_layer", color =("Site_layer"), measures=c("Observed")) + geom_boxplot() + ggtitle(i) + stat_compare_means(method = "anova") + stat_compare_means(aes(label=..p.signif..), method = "t.test", ref.group = ".all.") + theme(plot.title = element_text(hjust = 0.5))
+  print(APS.plot)
+}
+dev.off()
+```
+
+Save pdf of plot_richness results for each fungal class in the loop which go through FungiClass
+Note: following code plot alpha diversity by Crust type
+
+```{r}
+pdf("./Figures/Fungal Trophic.Mode Alpha Diversity (Observed) by Crust type.pdf", width = 8, height = 5 )
+for (i in FungiGuild) {
+  APS = subset_taxa(physeq.prune.rarefy.nopossible, Trophic.Mode == i)
+  APS.plot = plot_richness(APS, x="Crust_type", color =("Crust_type"), measures=c("Observed")) + geom_boxplot() + ggtitle(i) + stat_compare_means(method = "anova") + stat_compare_means(aes(label=..p.signif..), method = "t.test", ref.group = ".all.", hide.ns = T)+ theme(plot.title = element_text(hjust = 0.5))
+  print(APS.plot)
+}
+dev.off()
+```
+
+###STEP11.4: Plotting alpha diversity for each Growth.Morphology
+Subset fungal OTUs by class
+
+```{r}
+FungiGuild = as.character(get_taxa_unique(physeq.prune.rarefy.nopossible, "Growth.Morphology"))
+FungiGuild = FungiGuild[complete.cases(FungiGuild)]
+```
+
+Save pdf of plot_richness results for each fungal class in the loop which go through FungiClass
+Note: following code plot alpha diversity by Site and Layer
+```{r}
+pdf("./Figures/Fungal Growth.Morphology Alpha Diversity (Observed) by Site and Layer.pdf", width = 8, height = 5 )
+for (i in FungiGuild) {
+  APS = subset_taxa(physeq.prune.rarefy.nopossible, Growth.Morphology == i)
+  APS.plot = plot_richness(APS, x="Site_layer", color =("Site_layer"), measures=c("Observed")) + geom_boxplot() + ggtitle(i) + stat_compare_means(method = "anova") + theme(plot.title = element_text(hjust = 0.5))
+  print(APS.plot)
+}
+dev.off()
+```
+
+Save pdf of plot_richness results for each fungal class in the loop which go through FungiClass
+Note: following code plot alpha diversity by Crust type
+
+```{r}
+pdf("./Figures/Fungal Growth.Morphology Alpha Diversity (Observed) by Crust type.pdf", width = 8, height = 5 )
+for (i in FungiGuild) {
+  APS = subset_taxa(physeq.prune.rarefy.nopossible, Growth.Morphology == i)
+  APS.plot = plot_richness(APS, x="Crust_type", color =("Crust_type"), measures=c("Observed")) + geom_boxplot() + ggtitle(i) + stat_compare_means(method = "anova") + theme(plot.title = element_text(hjust = 0.5))
+  print(APS.plot)
+}
+dev.off()
+```
+
+
+
+
+
+
+
+
+###STEP11.4 Summarize taxa composition
+
+```{r}
+taxa.summary.by.phylum = summarize_taxa(physeq.prune.rarefy, "Phylum")
+```
+
+######To save taxa summary into text file under your current working directory.
+
+```{r warning=FALSE}
+write.table(taxa.summary.by.phylum, file = "taxa.summary.by.phylum.txt", sep ="\t")
+```
+
+
+###STEP12.1 Taxonomic composition
+```{r fig.height=5, fig.width=8, fig.align="center"}
+taxcom_sitelayer = ggplot(data = psmelt(physeq.prune.rarefy.nopossible), mapping = aes_string(x = "Site_layer" ,y = "Abundance", fill = "Trophic.Mode" )) + 
+  geom_bar(stat="identity", position="fill") + 
+  ggtitle("Fungal Trophoc ModeComposition by Site and Layer")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+print(taxcom_sitelayer)
+```
+
+
+```{r fig.height=5, fig.width=8, fig.align="center"}
+pdf("./Figures/Fungal Taxonomic Composition (Class level) by Site and Layer.pdf", width = 12, height = 8 )
+taxcom_sitelayer
+dev.off()
+```
+
+```{r fig.height=5, fig.width=8, fig.align="center"}
+taxcom_crusttype = ggplot(data = psmelt(physeq.prune.rarefy.nopossible), mapping = aes_string(x = "Crust_type" ,y = "Abundance", fill = "Trophic.Mode" )) + 
+  geom_bar(stat="identity", position="fill") + 
+  ggtitle("Fungal Trophic Mode Composition by Crust type")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+print(taxcom_crusttype)
+```
+
+```{r fig.height=5, fig.width=8, fig.align="center"}
+pdf("./Figures/Fungal Trophic Mode Composition by Crust typee.pdf", width = 18, height = 8 )
+taxcom_crusttype
+dev.off()
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
