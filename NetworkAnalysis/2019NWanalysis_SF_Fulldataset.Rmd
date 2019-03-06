@@ -1,7 +1,7 @@
 ---
 title: "2019NWanalysis_SF_Fulldataset"
 author: "Nat Pombubpa"
-date: "Updated on February 7, 2019"
+date: "Updated on March 6, 2019"
 output: html_document
 ---
 
@@ -248,8 +248,6 @@ dev.off()
 ```
 
 
-
-
 ##Network analysis for LAC crust type
 ```{r}
 ps.taxglom.LAC = subset_samples(ps.taxglom, Crust_type=="LAC")
@@ -318,6 +316,26 @@ circos.clear()
 dev.off()
 ```
 
+##LAC FunGuilds
+
+```{r}
+FunGuild.circlize <- read.table("FGuilds.BAC.taxonomy.csv", header=T,sep=",")
+#tax_filtered <- tax.circlize[tax.circlize$OTU.ID %in% df.v1.v2$OTU1,]
+#tax_filtered
+```
+
+```{r}
+tail(FunGuild.circlize)
+```
+
+```{r}
+cdf.w.tax.FunGuilds = data.frame(OTU1=FunGuild.circlize[match(cdf$OTU1, FunGuild.circlize$OTU.ID), 3], OTU2=FunGuild.circlize[match(cdf$OTU2, FunGuild.circlize$OTU.ID), 3], Similarity=cdf$Similarity)
+cdf.w.tax.FunGuilds
+```
+
+
+
+
 ##Network analysis for CLC crust type
 ```{r}
 ps.taxglom.CLC = subset_samples(ps.taxglom, Crust_type=="CLC")
@@ -381,6 +399,7 @@ title(main = "Biocrust Microbial Community Network Analysis (CLC-Surface)")
 circos.clear()
 dev.off()
 ```
+
 
 ##Network analysis for GLC crust type
 ```{r}
