@@ -1,7 +1,7 @@
 ---
 title: "Mojave_Div_ITS_phyloseq"
 author: "Nat Pombubpa"
-date: "Updated on March 5, 2019"
+date: "Updated on March 6, 2019"
 output: html_document
 ---
 
@@ -29,124 +29,6 @@ library(data.table)
 library(tidyr)
 library(tidyverse)
 ```
-
-####Function to summarize taxonomy 
-plot_taxa_summary(GlobalPatterns, "Phylum")
-plot_taxa_summary(GlobalPatterns, "Phylum", "SampleType")
-summarize_taxa(GlobalPatterns, "Phylum")
-summarize_taxa(GlobalPatterns, "Phylum", "SampleType")
-
-This function was written by Joey (but it is not part of phyloseq package)
-[https://github.com/joey711/phyloseq/issues/418](https://github.com/joey711/phyloseq/issues/418)
-
-```{r warning=FALSE}
-fast_melt = function(physeq){
-  # supports "naked" otu_table as `physeq` input.
-  otutab = as(otu_table(physeq), "matrix")
-  if(!taxa_are_rows(physeq)){otutab <- t(otutab)}
-  otudt = data.table(otutab, keep.rownames = TRUE)
-  setnames(otudt, "rn", "taxaID")
-  # Enforce character taxaID key
-  otudt[, taxaIDchar := as.character(taxaID)]
-  otudt[, taxaID := NULL]
-  setnames(otudt, "taxaIDchar", "taxaID")
-  # Melt count table
-  mdt = melt.data.table(otudt, 
-                        id.vars = "taxaID",
-                        variable.name = "SampleID",
-                        value.name = "count")
-  # Remove zeroes, NAs
-  mdt <- mdt[count > 0][!is.na(count)]
-  # Calculate relative abundance
-  mdt[, RelativeAbundance := count / sum(count), by = SampleID]
-  if(!is.null(tax_table(physeq, errorIfNULL = FALSE))){
-    # If there is a tax_table, join with it. Otherwise, skip this join.
-    taxdt = data.table(as(tax_table(physeq, errorIfNULL = TRUE), "matrix"), keep.rownames = TRUE)
-    setnames(taxdt, "rn", "taxaID")
-    # Enforce character taxaID key
-    taxdt[, taxaIDchar := as.character(taxaID)]
-    taxdt[, taxaID := NULL]
-    setnames(taxdt, "taxaIDchar", "taxaID")
-    # Join with tax table
-    setkey(taxdt, "taxaID")
-    setkey(mdt, "taxaID")
-    mdt <- taxdt[mdt]
-  }
-  return(mdt)
-}
-
-summarize_taxa = function(physeq, Rank, GroupBy = NULL){
-  Rank <- Rank[1]
-  if(!Rank %in% rank_names(physeq)){
-    message("The argument to `Rank` was:\n", Rank,
-            "\nBut it was not found among taxonomic ranks:\n",
-            paste0(rank_names(physeq), collapse = ", "), "\n",
-            "Please check the list shown above and try again.")
-  }
-  if(!is.null(GroupBy)){
-    GroupBy <- GroupBy[1]
-    if(!GroupBy %in% sample_variables(physeq)){
-      message("The argument to `GroupBy` was:\n", GroupBy,
-              "\nBut it was not found among sample variables:\n",
-              paste0(sample_variables(physeq), collapse = ", "), "\n",
-              "Please check the list shown above and try again.")
-    }
-  }
-  # Start with fast melt
-  mdt = fast_melt(physeq)
-  if(!is.null(GroupBy)){
-    # Add the variable indicated in `GroupBy`, if provided.
-    sdt = data.table(SampleID = sample_names(physeq),
-                     var1 = get_variable(physeq, GroupBy))
-    setnames(sdt, "var1", GroupBy)
-    # Join
-    setkey(sdt, SampleID)
-    setkey(mdt, SampleID)
-    mdt <- sdt[mdt]
-  }
-  # Summarize
-  Nsamples = nsamples(physeq)
-  summarydt = mdt[, list(meanRA = sum(RelativeAbundance)/Nsamples,
-                         sdRA = sd(RelativeAbundance),
-                         minRA = min(RelativeAbundance),
-                         maxRA = max(RelativeAbundance)),
-                  by = c(Rank, GroupBy)]
-  return(summarydt)
-}
-
-plot_taxa_summary = function(physeq, Rank, GroupBy = NULL){
-  # Get taxa summary table 
-  dt1 = summarize_taxa(physeq, Rank = Rank, GroupBy = GroupBy)
-  # Set factor appropriately for plotting
-  RankCol = which(colnames(dt1) == Rank)
-  setorder(dt1, -meanRA)
-  dt1[, RankFac := factor(dt1[[Rank]], 
-                          levels = rev(dt1[[Rank]]))]
-  dt1[, ebarMax := max(c(0, min(meanRA + sdRA))), by = eval(Rank)]
-  dt1[, ebarMin := max(c(0, min(meanRA - sdRA))), by = eval(Rank)]
-  # Set zeroes to one-tenth the smallest value
-  ebarMinFloor = dt1[(ebarMin > 0), min(ebarMin)]
-  ebarMinFloor <- ebarMinFloor / 10
-  dt1[(ebarMin == 0), ebarMin := ebarMinFloor]
-
-  pRank = ggplot(dt1, aes(x = meanRA, y = RankFac)) +
-    scale_x_log10() +
-    xlab("Mean Relative Abundance") +
-    ylab(Rank) +
-    theme_bw()
-  if(!is.null(GroupBy)){
-    # pRank <- pRank + facet_wrap(facets = as.formula(paste("~", GroupBy)))
-    pRank <- pRank + geom_point(mapping = aes_string(colour = GroupBy),
-                                size = 5)
-  } else {
-    # Don't include error bars for faceted version
-    pRank <- pRank + geom_errorbarh(aes(xmax = ebarMax,
-                                        xmin = ebarMin))
-  }
-  return(pRank)
-}
-```
-
 
 ###STEP2: Import Mapping file (metadate file)
 1.Check mapping file before import to R, R doesn’t seem to like sample name to start with number or contain “-” in sample name. If you get error in this step, you should check file name first.
@@ -275,187 +157,47 @@ physeq.prune.rarefy = rarefy_even_depth(physeq.prune, sample.size = 6842, replac
 physeq.prune.rarefy
 ```
 
-###STEP11: Rarefaction curve
-Extract OTU table, transpose and convert to data frame
-```{bash}
-#create new folder for figures if needed
-#mkdir Figures
-```
-
-Extract OTU table from phyloseq object as data frame and use vegan to calculate rarefaction curve
+###STEP11: Beta diversity
 ```{r}
-otu.rare <- otu_table(physeq.prune.rarefy)
-otu.rare <- as.data.frame(t(otu.rare))
-sample_names <- rownames(otu.rare)
-
-#vegan rarecurve 
-otu.rarecurve <- rarecurve(otu.rare, step = 500, sample = 30000, label = T)
+ps.dist = phyloseq::distance(physeq.prune, "unifrac")
 ```
 
 ```{r}
-rare <- lapply(otu.rarecurve, function(x){
-  b <- as.data.frame(x)
-  b <- data.frame(OTU = b[,1], Sample.size = rownames(b))
-  b$Sample.size <- as.numeric(gsub("N", "",  b$Sample.size))
-  return(b)
-})
-```
-label list
-```{r}
-names(rare) <- sample_names
-```
-convert to data frame
-```{r}
-#tidyverse
-rare <- map_dfr(rare, function(x){
-  z <- data.frame(x)
-  return(z)
-}, .id = "sample")
+adonis(ps.dist ~ Site_layer, as(sample_data(physeq.prune),"data.frame"))
 ```
 
 ```{r}
-head(rare)
+adonis(ps.dist ~ Crust_type, as(sample_data(physeq.prune),"data.frame"))
 ```
 
-Plot rarecurve using ggplot
-
 ```{r}
-ggplot(data = rare)+
-  geom_line(aes(x = Sample.size, y = OTU, color = sample), show.legend = FALSE)+
-  scale_x_continuous(labels =  waiver()) + theme_bw() + ggtitle("Fungal Rarefaction Curve")+
-  theme(plot.title = element_text(hjust = 0.5))
+physeq.prune.x = prune_taxa(taxa_sums(physeq.prune.rarefy) > 1, physeq.prune.rarefy)
+physeq.prune.x.ord <- ordinate(physeq.prune.x, "PCoA", "unifrac")
 ```
 
-Save ggplot as pdf to figures folder using the full path
+```{r}
+pssitelayer = plot_ordination(physeq.prune.x, physeq.prune.x.ord, type = "samples", color = "Site_layer") + theme_bw() + ggtitle("Fungal Beta Diversity (PCoA) by Site and Layer") + theme(plot.title = element_text(hjust = 0.5)) + stat_ellipse(geom = "polygon", alpha = 1/12, aes(fill = Site_layer)) + annotate("text", x = -0.3, y = 0.38, label = "PERMANOVA, p = 0.001")
+
+pssitelayer
+```
 
 ```{r}
-pdf("./Figures/Fungal Rarefaction Curve.pdf", width = 8, height = 5 )
-ggplot(data = rare)+
-  geom_line(aes(x = Sample.size, y = OTU, color = sample), show.legend = FALSE)+
-  scale_x_continuous(labels =  waiver()) + theme_bw() + ggtitle("Fungal Rarefaction Curve")+
-  theme(plot.title = element_text(hjust = 0.5))
+pdf("./Figures/Fungal Beta Diversity (PCoA) by Site and Layer.pdf")
+pssitelayer
 dev.off()
 ```
 
-###STEP11.1: Plot Alpha diversity by Crust_type
-Alpha diversity can be Chao1, Observed, Shannon, Simpson
-This plot include statistical analysis using "stat_compare_means" with "method = anova"
-
 ```{r}
-physeq.prune.rarefy.plot.richness.Crust_type = plot_richness(physeq.prune.rarefy, x="Crust_type", color=("Crust_type"), measures=c("Chao1")) + geom_boxplot() + ggtitle("Mojave Biocrust Bacterial Alpha Diversity (Chao1) by Crust type") + stat_compare_means(method = "anova", label.y = 3000) + stat_compare_means(aes(label=..p.signif..), method = "t.test", ref.group = "LAC", label.y = 2800, hide.ns = TRUE) + theme_bw() + theme(plot.title = element_text(hjust = 0.5))
+pscrusttype = plot_ordination(physeq.prune.x, physeq.prune.x.ord, type = "samples", color = "Crust_type")  + theme_bw() + ggtitle("Bacterial Beta Diversity (PCoA) by Crust type") + theme(plot.title = element_text(hjust = 0.5)) + stat_ellipse(geom = "polygon", alpha = 1/12, aes(fill = Layer)) + annotate("text", x = -0.38, y = 0.54, label = "PERMANOVA, p = 0.001")
 
-physeq.prune.rarefy.plot.richness.Crust_type
+pscrusttype
 ```
 
 ```{r}
-physeq.prune.rarefy.ps.plot.richness = plot_richness(physeq.prune.rarefy, x="Crust_type", color=("Crust_type"), measures=c("Observed")) + geom_boxplot() + ggtitle("Mojave Biocrust Fungal Alpha Diversity (Chao1) by Crust type") + stat_compare_means(method = "anova", label.y = 400) + stat_compare_means(aes(label=..p.signif..), method = "t.test", ref.group = "GLC", label.y = 380, hide.ns = TRUE) + theme_bw() + theme(plot.title = element_text(hjust = 0.5))
-
-physeq.prune.rarefy.ps.plot.richness
-```
-
-```{r}
-pdf("./Figures/Mojave Biocrust Fungal Alpha Diversity (Observed) by Crust type.pdf", width = 8, height = 5)
-physeq.prune.rarefy.ps.plot.richness
+pdf("./Figures/Fungal Beta Diversity (PCoA) by Crust type.pdf")
+pscrusttype
 dev.off()
 ```
-
-
-###STEP11.2: Plot Alpha diversity (Observed) by Site and Layer
-
-```{r warning=FALSE}
-physeq.prune.rarefy.ps.plot.richness.site.layer = plot_richness(physeq.prune.rarefy, x="Site_layer", color=("Site_layer"), measures=c("Observed")) + geom_boxplot() + ggtitle("Mojave Biocrust Fungal Alpha Diversity (Observed) by Site and Layer") + stat_compare_means(method = "anova", label.y = 400) + stat_compare_means(aes(label=..p.signif..), method = "t.test", ref.group = "GMT_Sub", label.y = 380, hide.ns = TRUE) + theme_bw() + theme(plot.title = element_text(hjust = 0.5))
-
-physeq.prune.rarefy.ps.plot.richness.site.layer
-```
-
-To save Alpha diversity (Chao1) by Site plot as a pdf into your current working directory.
-
-```{r warning=FALSE}
-pdf("./Figures/Mojave Biocrust Fungal Alpha Diversity (Observed) by Site and Layer.pdf", width = 8, height = 5)
-physeq.prune.rarefy.ps.plot.richness.site.layer
-dev.off()
-```
-
-###STEP11.3: Plotting alpha diversity for each selected taxonomy level
-Subset fungal OTUs by class
-
-```{r}
-FungiClass = as.character(get_taxa_unique(physeq.prune.rarefy, "Class"))
-FungiClass = FungiClass[complete.cases(FungiClass)]
-```
-
-Save pdf of plot_richness results for each fungal class in the loop which go through FungiClass
-Note: following code plot alpha diversity by Site and Layer
-```{r}
-pdf("./Figures/Fungal Class Alpha Diversity Observed by Site and Layer.pdf", width = 8, height = 5 )
-for (i in FungiClass) {
-  APS = subset_taxa(physeq.prune.rarefy, Class == i)
-  APS.plot = plot_richness(APS, x="Site_layer", color =("Site_layer"), measures=c("Observed")) + geom_boxplot() + ggtitle(i) + stat_compare_means(method = "anova") + theme(plot.title = element_text(hjust = 0.5))
-  print(APS.plot)
-}
-dev.off()
-```
-
-Save pdf of plot_richness results for each fungal class in the loop which go through FungiClass
-Note: following code plot alpha diversity by Crust type
-
-```{r}
-pdf("./Figures/Fungal Class Alpha Diversity (Observed) by Crust type.pdf", width = 8, height = 5 )
-for (i in FungiClass) {
-  APS = subset_taxa(physeq.prune.rarefy, Class == i)
-  APS.plot = plot_richness(APS, x="Crust_type", color =("Crust_type"), measures=c("Observed")) + geom_boxplot() + ggtitle(i) + stat_compare_means(method = "anova") + theme(plot.title = element_text(hjust = 0.5))
-  print(APS.plot)
-}
-dev.off()
-```
-
-###STEP11.4 Summarize taxa composition
-
-```{r}
-taxa.summary.by.phylum = summarize_taxa(physeq.prune.rarefy, "Phylum")
-```
-
-######To save taxa summary into text file under your current working directory.
-
-```{r warning=FALSE}
-write.table(taxa.summary.by.phylum, file = "taxa.summary.by.phylum.txt", sep ="\t")
-```
-
-
-###STEP12.1 Taxonomic composition
-```{r fig.height=5, fig.width=8, fig.align="center"}
-taxcom_sitelayer = ggplot(data = psmelt(physeq.prune.rarefy), mapping = aes_string(x = "Site_layer" ,y = "Abundance", fill = "Class" )) + 
-  geom_bar(stat="identity", position="fill") + 
-  ggtitle("Fungal Taxonomic Composition (Class level) by Site and Layer")+
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
-#print(taxcom_sitelayer)
-```
-
-```{r fig.height=5, fig.width=8, fig.align="center"}
-pdf("./Figures/Fungal Taxonomic Composition (Class level) by Site and Layer.pdf", width = 12, height = 8 )
-taxcom_sitelayer
-dev.off()
-```
-
-```{r fig.height=5, fig.width=8, fig.align="center"}
-taxcom_crusttype = ggplot(data = psmelt(physeq.prune.rarefy), mapping = aes_string(x = "Crust_type" ,y = "Abundance", fill = "Class" )) + 
-  geom_bar(stat="identity", position="fill") + 
-  ggtitle("Fungal Taxonomic Composition (Class level) by Crust type")+
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
-```
-
-```{r fig.height=5, fig.width=8, fig.align="center"}
-pdf("./Figures/Fungal Taxonomic Composition (Class level) by Crust type.pdf", width = 12, height = 8 )
-taxcom_crusttype
-dev.off()
-```
-
-
-
-
-
-
-
 
 
 
