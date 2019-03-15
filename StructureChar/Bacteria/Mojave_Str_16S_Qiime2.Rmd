@@ -221,8 +221,26 @@ physeq.prune.rarefy
 
 ###STEP12: Beta diversity
 ```{r}
-physeq.prune.x = prune_taxa(taxa_sums(physeq) > 10, physeq)
+physeq.prune.x = prune_taxa(taxa_sums(physeq) > 15, physeq)
+#physeq.prune.x.SF = subset_samples(physeq.prune.x, Layer=="Surface")
 physeq.prune.x.ord <- ordinate(physeq.prune.x, "PCoA", "unifrac")
+```
+
+```{r}
+sample_data(physeq.prune.x)$Site = factor(sample_data(physeq.prune.x)$Site, levels = c("JTNP","CIMA", "GMT", "KELSO"))
+```
+
+
+```{r}
+pssitelayer = plot_ordination(physeq.prune.x, physeq.prune.x.ord, type = "samples", color = "Site", shape = "Layer") + ggtitle("Bacterial Beta Diversity (PCoA) by Site") + theme(plot.title = element_text(hjust = 0.5)) + annotate("text", x = -0.25, y = 0.28, label = "PERMANOVA, p = 0.001") + geom_point(size=5) + scale_colour_manual(values = c("#000000", "#E69F00", "#56B4E9", "#009E73", "#CC79A7")) #+ stat_ellipse(geom = "polygon", type = "t", alpha = 1/12, aes(fill = Site_layer)) 
+
+pssitelayer
+```
+
+```{r}
+pdf("./Figures/Bacterial Beta Diversity (PCoA) by Site (w Layer as shape)PLPA250.pdf", width = 8, height = 5 )
+pssitelayer
+dev.off()
 ```
 
 ```{r}
@@ -242,11 +260,39 @@ ps.dist = phyloseq::distance(physeq.prune.x, "unifrac")
 ```
 
 ```{r}
+adonis(ps.dist ~ Site, as(sample_data(physeq.prune.x),"data.frame"))
+```
+
+
+```{r}
 adonis(ps.dist ~ Site_layer, as(sample_data(physeq.prune.x),"data.frame"))
 ```
 
 ```{r}
 adonis(ps.dist ~ Crust_type, as(sample_data(physeq.prune.x),"data.frame"))
+```
+
+###Beta by Crust type
+```{r}
+physeq.prune.x = prune_taxa(taxa_sums(physeq) > 15, physeq)
+#physeq.prune.x.SF = subset_samples(physeq.prune.x, Layer=="Surface")
+physeq.prune.x.ord <- ordinate(physeq.prune.x, "PCoA", "unifrac")
+```
+
+```{r}
+sample_data(physeq.prune.x)$Crust_type = factor(sample_data(physeq.prune.x)$Crust_type, levels = c("LAC","CLC", "GLC", "RMC", "SMC", "LAC.Sub","CLC.Sub", "GLC.Sub", "RMC.Sub", "SMC.Sub"))
+```
+
+```{r}
+pscrusttype = plot_ordination(physeq.prune.x, physeq.prune.x.ord, type = "samples", color = "Crust_type", shape = "Layer") + ggtitle("Bacterial Beta Diversity (PCoA) by Crust_type") + theme(plot.title = element_text(hjust = 0.5)) + annotate("text", x = -0.25, y = 0.28, label = "PERMANOVA, p = 0.001") + geom_point(size=5) + scale_colour_manual(values = c("#000000", "#E69F00", "#56B4E9", "#009E73", "#CC79A7", "#000000", "#E69F00", "#56B4E9", "#009E73", "#CC79A7")) #+ stat_ellipse(geom = "polygon", type = "t", alpha = 1/12, aes(fill = Site_layer)) 
+
+pscrusttype
+```
+
+```{r}
+pdf("./Figures/Bacterial Beta Diversity (PCoA) by Crust type PLPA250.pdf", width = 8, height = 5 )
+pscrusttype
+dev.off()
 ```
 
 ```{r}

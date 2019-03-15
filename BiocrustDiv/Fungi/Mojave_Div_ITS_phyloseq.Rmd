@@ -362,6 +362,60 @@ dev.off()
 
 ###STEP11.2: Plot Alpha diversity (Observed) by Site and Layer
 
+###Reorder Site
+```{r}
+physeq.prune.rarefy.SF = subset_samples(physeq.prune, Layer=="Surface")
+sample_data(physeq.prune.rarefy.SF)$Site = factor(sample_data(physeq.prune.rarefy.SF)$Site, levels = c("JTNP","CIMA", "GMT", "KELSO"))
+```
+
+###ANOVA
+```{r}
+alpha.diversity = estimate_richness(physeq.prune.rarefy.SF, measures = c("Observed"))
+data.anova = cbind(sample_data(physeq.prune.rarefy.SF), alpha.diversity)
+physeq.prune.rarefy.SF.anova = aov(Observed ~ Site, data.anova)
+summary(physeq.prune.rarefy.SF.anova)
+```
+
+```{r}
+tukey.ps.SF = TukeyHSD(x=physeq.prune.rarefy.SF.anova, 'Site', conf.level = 0.95)
+```
+
+```{r}
+generate_label_df <- function(tukey.ps.SF, variable){
+ 
+     # Extract labels and factor levels from Tukey post-hoc 
+     Tukey.levels <- tukey.ps.SF[[variable]][,4]
+     Tukey.labels <- data.frame(multcompLetters(Tukey.levels)['Letters'])
+     
+     #I need to put the labels in the same order as in the boxplot :
+     Tukey.labels$treatment=rownames(Tukey.labels)
+     Tukey.labels=Tukey.labels[order(Tukey.labels$treatment) , ]
+     return(Tukey.labels)
+     }
+```
+
+
+```{r}
+LABELS=generate_label_df(tukey.ps.SF, 'Site')
+```
+
+```{r}
+names(LABELS) = c('Letters','Site')
+```
+
+```{r}
+physeq.prune.rarefy.plot.richness.Site_layer = plot_richness(physeq.prune.rarefy.SF, x="Site", color=("Site"), measures=c("Observed")) + geom_boxplot(lwd=1,fill=c("#999999", "gold2", "cadetblue3", "palegreen2")) + ggtitle("Fungal Alpha Diversity by Site") + stat_compare_means(method = "anova", label.y = 520) + theme(plot.title = element_text(hjust = 0.5)) + scale_colour_manual(values = c("#000000", "#E69F00", "#56B4E9", "#009E73")) + geom_text(data=LABELS, aes(x=LABELS$Site, y = 500, label = LABELS$Letters))
+
+physeq.prune.rarefy.plot.richness.Site_layer 
+```
+
+```{r warning=FALSE}
+pdf("./Figures/Fungal Alpha Diversity by Site.pdf", width = 8, height = 5)
+physeq.prune.rarefy.plot.richness.Site_layer 
+dev.off()
+```
+
+
 ```{r warning=FALSE}
 physeq.prune.rarefy.ps.plot.richness.site.layer = plot_richness(physeq.prune.rarefy, x="Site_layer", color=("Site_layer"), measures=c("Observed")) + geom_boxplot() + ggtitle("Mojave Biocrust Fungal Alpha Diversity (Observed) by Site and Layer") + stat_compare_means(method = "anova", label.y = 400) + stat_compare_means(aes(label=..p.signif..), method = "t.test", ref.group = "GMT_Sub", label.y = 380, hide.ns = TRUE) + theme_bw() + theme(plot.title = element_text(hjust = 0.5))
 
@@ -376,21 +430,75 @@ physeq.prune.rarefy.ps.plot.richness.site.layer
 dev.off()
 ```
 
+###Alpha div by crust type
+###Reorder Crust_type
+```{r}
+physeq.prune.rarefy.SF = subset_samples(physeq.prune, Layer=="Surface")
+sample_data(physeq.prune.rarefy.SF)$Crust_type = factor(sample_data(physeq.prune.rarefy.SF)$Crust_type, levels = c("LAC","CLC", "GLC", "RMC", "SMC"))
+```
+
+###ANOVA
+```{r}
+alpha.diversity = estimate_richness(physeq.prune.rarefy.SF, measures = c("Observed"))
+data.anova = cbind(sample_data(physeq.prune.rarefy.SF), alpha.diversity)
+physeq.prune.rarefy.SF.anova = aov(Observed ~ Crust_type, data.anova)
+summary(physeq.prune.rarefy.SF.anova)
+```
+
+```{r}
+tukey.ps.SF = TukeyHSD(x=physeq.prune.rarefy.SF.anova, 'Crust_type', conf.level = 0.95)
+```
+
+```{r}
+generate_label_df <- function(tukey.ps.SF, variable){
+ 
+     # Extract labels and factor levels from Tukey post-hoc 
+     Tukey.levels <- tukey.ps.SF[[variable]][,4]
+     Tukey.labels <- data.frame(multcompLetters(Tukey.levels)['Letters'])
+     
+     #I need to put the labels in the same order as in the boxplot :
+     Tukey.labels$treatment=rownames(Tukey.labels)
+     Tukey.labels=Tukey.labels[order(Tukey.labels$treatment) , ]
+     return(Tukey.labels)
+     }
+```
+
+
+```{r}
+LABELS=generate_label_df(tukey.ps.SF, 'Crust_type')
+```
+
+```{r}
+names(LABELS) = c('Letters','Crust_type')
+```
+
+```{r}
+physeq.prune.rarefy.plot.richness.Crust_type = plot_richness(physeq.prune.rarefy.SF, x="Crust_type", color=("Crust_type"), measures=c("Observed")) + geom_boxplot(lwd=1,fill=c("#999999", "gold2", "cadetblue3", "palegreen2", "lightpink")) + ggtitle("Fungal Alpha Diversity by Crust_type") + stat_compare_means(method = "anova", label.y = 520) + theme(plot.title = element_text(hjust = 0.5)) + scale_colour_manual(values = c("#000000", "#E69F00", "#56B4E9", "#009E73", "#CC79A7")) + geom_text(data=LABELS, aes(x=LABELS$Crust_type, y = 500, label = LABELS$Letters))
+
+physeq.prune.rarefy.plot.richness.Crust_type
+```
+
+```{r warning=FALSE}
+pdf("./Figures/Fungal Alpha Diversity (Observed) by Crust_type.pdf", width = 8, height = 5)
+physeq.prune.rarefy.plot.richness.Crust_type
+dev.off()
+```
+
 ###STEP11.3: Plotting alpha diversity for each selected taxonomy level
 Subset fungal OTUs by class
 
 ```{r}
-FungiClass = as.character(get_taxa_unique(physeq.prune.rarefy, "Class"))
+FungiClass = as.character(get_taxa_unique(physeq.prune.rarefy.SF, "Class"))
 FungiClass = FungiClass[complete.cases(FungiClass)]
 ```
 
 Save pdf of plot_richness results for each fungal class in the loop which go through FungiClass
 Note: following code plot alpha diversity by Site and Layer
 ```{r}
-pdf("./Figures/Fungal Class Alpha Diversity Observed by Site and Layer.pdf", width = 8, height = 5 )
+pdf("./Figures/Fungal Class Alpha Diversity Observed by Site PLPA250.pdf", width = 8, height = 5 )
 for (i in FungiClass) {
-  APS = subset_taxa(physeq.prune.rarefy, Class == i)
-  APS.plot = plot_richness(APS, x="Site_layer", color =("Site_layer"), measures=c("Observed")) + geom_boxplot() + ggtitle(i) + stat_compare_means(method = "anova") + theme(plot.title = element_text(hjust = 0.5))
+  APS = subset_taxa(physeq.prune.rarefy.SF, Class == i)
+  APS.plot = plot_richness(APS, x="Site", color =("Site"), measures=c("Observed")) + geom_boxplot(lwd=1,fill=c("#999999", "gold2", "cadetblue3", "palegreen2")) + ggtitle(i) + stat_compare_means(method = "anova") + theme(plot.title = element_text(hjust = 0.5)) + scale_colour_manual(values = c("#000000", "#E69F00", "#56B4E9", "#009E73"))
   print(APS.plot)
 }
 dev.off()
@@ -451,7 +559,21 @@ dev.off()
 ```
 
 
+```{r fig.height=5, fig.width=8, fig.align="center"}
+taxcom_site = ggplot(data = psmelt(physeq.prune.rarefy.SF), mapping = aes_string(x = "Site" ,y = "Abundance", fill = "Class" )) + 
+  geom_bar(stat="identity", position="fill") + 
+  ggtitle("Fungal Taxonomic Composition by Site")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+  theme(plot.title = element_text(hjust = 0.5))
 
+#print(taxcom_sitelayer)
+```
+
+```{r fig.height=5, fig.width=8, fig.align="center"}
+pdf("./Figures/Fungal Taxonomic Composition by Site.pdf", width = 10, height = 6 )
+taxcom_site
+dev.off()
+```
 
 
 
