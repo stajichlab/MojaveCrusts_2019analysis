@@ -1,7 +1,7 @@
 ---
 title: "Mojave_Div_16S_Qiime2"
 author: "Nat Pombubpa"
-date: "Updated on March 5, 2019"
+date: "Updated on April 23, 2019"
 output: html_document
 ---
 
@@ -345,27 +345,32 @@ This plot include statistical analysis using "stat_compare_means" with "method =
 
 ###Reorder Crust_type
 ```{r}
-physeq.prune.rarefy.SF = subset_samples(physeq.prune.rarefy, Layer=="Surface")
-sample_data(physeq.prune.rarefy.SF)$Crust_type = factor(sample_data(physeq.prune.rarefy.SF)$Crust_type, levels = c("LAC","CLC", "GLC", "RMC", "SMC"))
+#physeq.prune.rarefy.SF = subset_samples(physeq.prune.rarefy, Layer=="Surface")
+sample_data(physeq.prune.rarefy)$Crust_type = factor(sample_data(physeq.prune.rarefy)$Crust_type, levels = c("LAC","CLC", "GLC", "RMC", "SMC","LAC.Sub","CLC.Sub", "GLC.Sub", "RMC.Sub", "SMC.Sub"))
 ```
 
 ###ANOVA
 ```{r}
-alpha.diversity = estimate_richness(physeq.prune.rarefy.SF, measures = c("Observed"))
-data.anova = cbind(sample_data(physeq.prune.rarefy.SF), alpha.diversity)
-physeq.prune.rarefy.SF.anova = aov(Observed ~ Crust_type, data.anova)
-summary(physeq.prune.rarefy.SF.anova)
+alpha.diversity = estimate_richness(physeq.prune.rarefy, measures = c("Observed"))
+data.anova = cbind(sample_data(physeq.prune.rarefy), alpha.diversity)
+physeq.prune.rarefy.anova = aov(Observed ~ Crust_type, data.anova)
+summary(physeq.prune.rarefy.anova)
 ```
 
 ```{r}
-tukey.ps.SF = TukeyHSD(x=physeq.prune.rarefy.SF.anova, 'Crust_type', conf.level = 0.95)
+tukey.ps = TukeyHSD(x=physeq.prune.rarefy.anova, 'Crust_type', conf.level = 0.95)
 ```
 
 ```{r}
-generate_label_df <- function(tukey.ps.SF, variable){
+plot(tukey.ps , las=1 , col="brown" )
+```
+
+
+```{r}
+generate_label_df <- function(tukey.ps, variable){
  
      # Extract labels and factor levels from Tukey post-hoc 
-     Tukey.levels <- tukey.ps.SF[[variable]][,4]
+     Tukey.levels <- tukey.ps[[variable]][,4]
      Tukey.labels <- data.frame(multcompLetters(Tukey.levels)['Letters'])
      
      #I need to put the labels in the same order as in the boxplot :
@@ -376,7 +381,7 @@ generate_label_df <- function(tukey.ps.SF, variable){
 ```
 
 ```{r}
-LABELS=generate_label_df(tukey.ps.SF, 'Crust_type')
+LABELS=generate_label_df(tukey.ps, 'Crust_type')
 ```
 
 ```{r}
@@ -384,13 +389,33 @@ names(LABELS) = c('Letters','Crust_type')
 ```
 
 ```{r}
-physeq.prune.rarefy.plot.richness.Crust_type = plot_richness(physeq.prune.rarefy.SF, x="Crust_type", color=("Crust_type"), measures=c("Observed")) + geom_boxplot(lwd=1,fill=c("#999999", "gold2", "cadetblue3", "palegreen2", "lightpink")) + ggtitle("Bacterial Alpha Diversity by Crust_type") + stat_compare_means(method = "anova", label.y = 1222) + theme(plot.title = element_text(hjust = 0.5)) + scale_colour_manual(values = c("#000000", "#E69F00", "#56B4E9", "#009E73", "#CC79A7")) + geom_text(data=LABELS, aes(x=LABELS$Crust_type, y = 1150, label = LABELS$Letters))
-
-physeq.prune.rarefy.plot.richness.Crust_type 
+LABELS
 ```
 
+
+```{r}
+ylabel <- data.frame("ylabel" = c(1150,2100,1050,2050,850,2650,1200,2500,1100,1900))
+```
+
+```{r}
+LABELS$ylabel<-ylabel$ylabel
+```
+
+```{r}
+#physeq.prune.rarefy.plot.richness.Crust_type = plot_richness(physeq.prune.rarefy, x="Crust_type", color=("Crust_type"), measures=c("Observed")) + geom_boxplot(lwd=1,fill=c("#999999", "gold2", "cadetblue3", "palegreen2", "lightpink")) + ggtitle("Bacterial Alpha Diversity by Crust_type") + stat_compare_means(method = "anova", label.y = 1222) + theme(plot.title = element_text(hjust = 0.5)) + scale_colour_manual(values = c("#000000", "#E69F00", "#56B4E9", "#009E73", "#CC79A7")) + geom_text(data=LABELS, aes(x=LABELS$Crust_type, y = 1150, label = LABELS$Letters))
+
+#physeq.prune.rarefy.plot.richness.Crust_type 
+```
+
+```{r}
+physeq.prune.rarefy.plot.richness.Crust_type = plot_richness(physeq.prune.rarefy, x="Crust_type", color=("Crust_type"), measures=c("Observed")) + geom_boxplot() + ggtitle("Mojave Biocrust Bacterial Alpha Diversity by Crust type and Layer") + stat_compare_means(method = "anova", label.y = 2800) + theme(plot.title = element_text(hjust = 0.5)) + geom_text(data=LABELS, aes(x=LABELS$Crust_type, y = LABELS$ylabel , label = LABELS$Letters))
+
+physeq.prune.rarefy.plot.richness.Crust_type
+```
+
+
 ```{r warning=FALSE}
-pdf("./Figures/Bacterial Alpha (Observed) Diversity by Crust type PLPA250.pdf", width = 8, height = 5 )
+pdf("./Figures/Mojave Biocrust Bacterial Alpha Diversity by Crust type and Layer.pdf", width = 8, height = 5 )
 physeq.prune.rarefy.plot.richness.Crust_type
 dev.off()
 ```
@@ -416,34 +441,32 @@ sample_data(physeq.prune.rarefy)$Site_layer = factor(sample_data(physeq.prune.ra
 
 ###Reorder Site
 ```{r}
-physeq.prune.rarefy.SF = subset_samples(physeq.prune.rarefy, Layer=="Surface")
-sample_data(physeq.prune.rarefy.SF)$Site = factor(sample_data(physeq.prune.rarefy.SF)$Site, levels = c("JTNP","CIMA", "GMT", "KELSO"))
+#physeq.prune.rarefy.SF = subset_samples(physeq.prune.rarefy, Layer=="Surface")
+#sample_data(physeq.prune.rarefy.SF)$Site = factor(sample_data(physeq.prune.rarefy.SF)$Site, levels = c("JTNP","CIMA", "GMT", "KELSO"))
 ```
 
 
 ###ANOVA
 ```{r}
-alpha.diversity = estimate_richness(physeq.prune.rarefy.SF, measures = c("Observed"))
-data.anova = cbind(sample_data(physeq.prune.rarefy.SF), alpha.diversity)
-physeq.prune.rarefy.SF.anova = aov(Observed ~ Site, data.anova)
-summary(physeq.prune.rarefy.SF.anova)
+alpha.diversity = estimate_richness(physeq.prune.rarefy, measures = c("Observed"))
+data.anova = cbind(sample_data(physeq.prune.rarefy), alpha.diversity)
+physeq.prune.rarefy.anova = aov(Observed ~ Site_layer, data.anova)
+summary(physeq.prune.rarefy.anova)
 ```
 
 ```{r}
-physeq.prune.rarefy.SF.anova
-```
-
-
-
-```{r}
-tukey.ps.SF = TukeyHSD(x=physeq.prune.rarefy.SF.anova, 'Site', conf.level = 0.95)
+physeq.prune.rarefy.anova
 ```
 
 ```{r}
-generate_label_df <- function(tukey.ps.SF, variable){
+tukey.ps = TukeyHSD(x=physeq.prune.rarefy.anova, 'Site_layer', conf.level = 0.95)
+```
+
+```{r}
+generate_label_df <- function(tukey.ps, variable){
  
      # Extract labels and factor levels from Tukey post-hoc 
-     Tukey.levels <- tukey.ps.SF[[variable]][,4]
+     Tukey.levels <- tukey.ps[[variable]][,4]
      Tukey.labels <- data.frame(multcompLetters(Tukey.levels)['Letters'])
      
      #I need to put the labels in the same order as in the boxplot :
@@ -455,25 +478,40 @@ generate_label_df <- function(tukey.ps.SF, variable){
 
 
 ```{r}
-LABELS=generate_label_df(tukey.ps.SF, 'Site')
+LABELS=generate_label_df(tukey.ps, 'Site_layer')
 ```
 
 ```{r}
-names(LABELS) = c('Letters','Site')
+names(LABELS) = c('Letters','Site_layer')
 ```
+
+```{r}
+ylabel <- data.frame("ylabel" = c(1150,2650,1200,2050,1000,1650,1100,2500))
+```
+
+```{r}
+LABELS$ylabel<-ylabel$ylabel
+```
+
 
 ```{r}
 LABELS
 ```
 
 ```{r}
-physeq.prune.rarefy.plot.richness.Site_layer = plot_richness(physeq.prune.rarefy.SF, x="Site", color=("Site"), measures=c("Observed")) + geom_boxplot(lwd=1,fill=c("#999999", "gold2", "cadetblue3", "palegreen2")) + ggtitle("Bacterial Alpha Diversity by Site") + stat_compare_means(method = "anova", label.y = 1222) + theme(plot.title = element_text(hjust = 0.5)) + scale_colour_manual(values = c("#000000", "#E69F00", "#56B4E9", "#009E73")) + geom_text(data=LABELS, aes(x=LABELS$Site, y = 1150, label = LABELS$Letters))
+#physeq.prune.rarefy.plot.richness.Site_layer = plot_richness(physeq.prune.rarefy.SF, x="Site", color=("Site"), measures=c("Observed")) + geom_boxplot(lwd=1,fill=c("#999999", "gold2", "cadetblue3", "palegreen2")) + ggtitle("Bacterial Alpha Diversity by Site") + stat_compare_means(method = "anova", label.y = 1222) + theme(plot.title = element_text(hjust = 0.5)) + scale_colour_manual(values = c("#000000", "#E69F00", "#56B4E9", "#009E73")) + geom_text(data=LABELS, aes(x=LABELS$Site, y = 1150, label = LABELS$Letters))
 
-physeq.prune.rarefy.plot.richness.Site_layer 
+#physeq.prune.rarefy.plot.richness.Site_layer 
+```
+
+```{r}
+physeq.prune.rarefy.plot.richness.Site_layer = plot_richness(physeq.prune.rarefy, x="Site_layer", color=("Site_layer"), measures=c("Observed")) + geom_boxplot() + ggtitle("Mojave Biocrust Bacterial Alpha Diversity by Site and Layer") + stat_compare_means(method = "anova", label.y = 2800) + theme(plot.title = element_text(hjust = 0.5)) + geom_text(data=LABELS, aes(x=LABELS$Site, y = LABELS$ylabel , label = LABELS$Letters))
+
+physeq.prune.rarefy.plot.richness.Site_layer
 ```
 
 ```{r warning=FALSE}
-pdf("./Figures/Bacterial Alpha Diversity by Site.pdf", width = 8, height = 5 )
+pdf("./Figures/Mojave Biocrust Bacterial Alpha Diversity by Site and Layer.pdf", width = 8, height = 5 )
 physeq.prune.rarefy.plot.richness.Site_layer
 dev.off()
 ```
