@@ -1,7 +1,7 @@
 ---
 title: "Mojave_Div_ITS_phyloseq"
 author: "Nat Pombubpa"
-date: "Updated on April 23, 2019"
+date: "Updated on April 29, 2019"
 output: html_document
 ---
 
@@ -612,10 +612,46 @@ dev.off()
 
 
 
+###Venn
 
+```{r}
+physeq.prune.rarefy = subset_taxa(physeq.prune.rarefy, Kingdom != "Rhizaria")
+physeq.prune.rarefy = subset_taxa(physeq.prune.rarefy, Kingdom != "Chromista")
+physeq.prune.rarefy = subset_taxa(physeq.prune.rarefy, Kingdom != "Unassigned")
+physeq.prune.rarefy = subset_taxa(physeq.prune.rarefy, Kingdom != "D_0__Eukaryota")
+physeq.prune.rarefy = subset_taxa(physeq.prune.rarefy, Kingdom != "NA")
+physeq.prune.rarefy
+```
 
+###Subset for Surface and Subsurface
+```{r}
+physeq.prune.rarefy.SF = subset_samples(physeq.prune.rarefy, Layer=="Surface")
+physeq.prune.rarefy.SF = prune_taxa(taxa_sums(physeq.prune.rarefy.SF) > 1, physeq.prune.rarefy.SF)
+physeq.prune.rarefy.SF
+```
 
+```{r}
+physeq.prune.rarefy.SUB = subset_samples(physeq.prune.rarefy, Layer=="Subsurface")
+physeq.prune.rarefy.SUB = prune_taxa(taxa_sums(physeq.prune.rarefy.SUB) > 1, physeq.prune.rarefy.SUB)
+physeq.prune.rarefy.SUB
+```
 
+```{r}
+OTU.name.physeq.prune.rarefy.SF = rownames((otu_table(physeq.prune.rarefy.SF)))
+```
+
+```{r}
+OTU.name.physeq.prune.rarefy.SUB = rownames((otu_table(physeq.prune.rarefy.SUB)))
+```
+
+```{r}
+## plot venn diagrams
+      
+# Surface vs Subsurface
+pdf("./Figures/Fungal_Surface_Subsurface_venn.pdf", width = 8, height = 8)
+ven_test = venn_diagram2(OTU.name.physeq.prune.rarefy.SF, OTU.name.physeq.prune.rarefy.SUB, "Surface", "Subsurface", colors= c("#009E73", "#CC79A7"), euler=TRUE, main = "Fungal Surface-Subsurface Venn")
+dev.off()
+```
 
 
 
