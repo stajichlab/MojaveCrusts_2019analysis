@@ -1,0 +1,156 @@
+---
+title: "Network_test"
+author: "Nat Pombubpa"
+date: "4/29/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(phyloseq)
+library(SpiecEasi)
+library(igraph)
+```
+
+###SpiecEasi Test
+
+####Bacteria
+```{r warning=FALSE}
+Bac.otus <- read.table("MC2018.network.BAC.otu_table.csv",
+                   header=T,sep=",",row.names = 1)
+Bac.otumat <- as(as.matrix(Bac.otus), "matrix")
+Bac.OTU = otu_table(Bac.otumat, taxa_are_rows = TRUE)
+```
+
+```{r}
+Bac.taxmat <- read.table("BAC.network.taxonomy.csv", header=T,sep=",",row.names=1)
+Bac.taxmat <- as(as.matrix(Bac.taxmat),"matrix")
+Bac.TAX = tax_table(Bac.taxmat)
+```
+
+```{r warning=FALSE}
+meta = read.table("Mojave_mappingfile_8-Aug-2018.txt",
+                  header=TRUE,row.names=1,
+                  sep="\t",stringsAsFactors=FALSE)
+```
+
+```{r warning=FALSE}
+sampleData <- sample_data(meta)
+```
+
+```{r warning=FALSE}
+Bac.physeq = phyloseq(Bac.OTU,Bac.TAX,sampleData)
+```
+
+```{r}
+Bac.physeq.prune = prune_taxa(taxa_sums(Bac.physeq) > 5, Bac.physeq)
+```
+
+```{r warning=FALSE}
+set.seed(711)
+Bac.physeq.prune.rarefy = rarefy_even_depth(Bac.physeq.prune, sample.size = 37435, replace = FALSE, trimOTUs = TRUE)
+Bac.physeq.prune.rarefy
+```
+
+```{r}
+Bac.physeq.prune.rarefy = subset_taxa(Bac.physeq.prune.rarefy, Kingdom != "Rhizaria")
+Bac.physeq.prune.rarefy = subset_taxa(Bac.physeq.prune.rarefy, Kingdom != "Chromista")
+Bac.physeq.prune.rarefy = subset_taxa(Bac.physeq.prune.rarefy, Kingdom != "Unassigned")
+Bac.physeq.prune.rarefy = subset_taxa(Bac.physeq.prune.rarefy, Kingdom != "D_0__Eukaryota")
+Bac.physeq.prune.rarefy
+```
+
+```{r}
+Bac.physeq.prune.rarefy.SF = subset_samples(Bac.physeq.prune.rarefy, Layer=="Surface")
+```
+
+```{r}
+Bac.physeq.prune.rarefy.SUB = subset_samples(Bac.physeq.prune.rarefy, Layer=="Subsurface")
+```
+
+####Fungi
+```{r}
+Fun.otus <- read.table("MC2018.network.FG.otu_table.csv",header=T,sep=",",row.names=1)
+Fun.otumat <- as(as.matrix(Fun.otus), "matrix")
+Fun.OTU = otu_table(Fun.otumat, taxa_are_rows = TRUE)
+```
+
+```{r}
+Fun.taxmat <- read.table("FG.network.taxonomy.csv", header=T,sep=",",row.names=1)
+Fun.taxmat <- as(as.matrix(Fun.taxmat),"matrix")
+Fun.TAX = tax_table(Fun.taxmat)
+```
+
+```{r warning=FALSE}
+Fun.physeq = phyloseq(Fun.OTU,Fun.TAX,sampleData)
+```
+
+```{r }
+Fun.physeq.prune = prune_taxa(taxa_sums(Fun.physeq) > 1, Fun.physeq)
+```
+
+```{r warning=FALSE}
+set.seed(1)
+Fun.physeq.prune.rarefy = rarefy_even_depth(Fun.physeq.prune, sample.size = 6842, replace = FALSE, trimOTUs = FALSE)
+Fun.physeq.prune.rarefy
+```
+
+```{r}
+Fun.physeq.prune.rarefy = subset_taxa(Fun.physeq.prune.rarefy, Kingdom != "Rhizaria")
+Fun.physeq.prune.rarefy = subset_taxa(Fun.physeq.prune.rarefy, Kingdom != "Chromista")
+Fun.physeq.prune.rarefy = subset_taxa(Fun.physeq.prune.rarefy, Kingdom != "Unassigned")
+Fun.physeq.prune.rarefy = subset_taxa(Fun.physeq.prune.rarefy, Kingdom != "D_0__Eukaryota")
+Fun.physeq.prune.rarefy = subset_taxa(Fun.physeq.prune.rarefy, Kingdom != "NA")
+Fun.physeq.prune.rarefy
+```
+
+```{r}
+Fun.physeq.prune.rarefy.SF = subset_samples(Fun.physeq.prune.rarefy, Layer=="Surface")
+```
+
+```{r}
+Fun.physeq.prune.rarefy.SUB = subset_samples(Fun.physeq.prune.rarefy, Layer=="Subsurface")
+```
+
+###SpiecEasi Cross Domain
+
+```{r}
+Bac.physeq.prune.rarefy.SF.top100 = prune_taxa(names(sort(taxa_sums(Bac.physeq.prune.rarefy.SF), TRUE))[1:38], Bac.physeq.prune.rarefy.SF)
+```
+
+```{r}
+Fun.physeq.prune.rarefy.SF.top100 = prune_taxa(names(sort(taxa_sums(Fun.physeq.prune.rarefy.SF), TRUE))[1:38], Fun.physeq.prune.rarefy.SF)
+```
+
+```{r}
+pargs <- list(rep.num = 50, seed = 10010, ncores = 6)
+FG.Bac.network <- spiec.easi(list(Bac.physeq.prune.rarefy.SF.top100, Fun.physeq.prune.rarefy.SF.top100), method='glasso', nlambda=40,
+              lambda.min.ratio=1e-2, pulsar.params = pargs)
+```
+
+```{r}
+FG.BAC.top100.merged = merge_phyloseq(Bac.physeq.prune.rarefy.SF.top100, Fun.physeq.prune.rarefy.SF.top100)
+FG.BAC.top100.merged
+```
+
+```{r}
+easi.fun.bac.net <- adj2igraph(getRefit(FG.Bac.network), rmEmptyNodes=TRUE, vertex.attr=list(name=taxa_names(FG.BAC.top100.merged)))
+```
+
+```{r}
+net.df = as_long_data_frame(easi.fun.bac.net)
+```
+
+```{r}
+cdf = data.frame(OTU1 = net.df$`ver[el[, 1], ]`, OTU2 = net.df$`ver2[el[, 2], ]`, WEIGHT = as.vector(net.df$weight), stringsAsFactors = TRUE )
+cdf
+```
+
+
+```{r}
+write.csv(cdf, file="EasiFunBacNet.csv")
+```
+
