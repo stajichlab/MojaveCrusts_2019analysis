@@ -1,7 +1,7 @@
 ---
 title: "Mojave_Div_16S_Qiime2"
 author: "Nat Pombubpa"
-date: "Updated on April 26, 2019"
+date: "Updated on April 29, 2019"
 output: html_document
 ---
 
@@ -760,7 +760,7 @@ venn_diagram2 <- function(a, b, name_a = "A", name_b = "B", colors =  c("#e41a1c
 		filename = NULL,
 		col = "grey28",
 		fill = c(colors[1], colors[2]),
-		alpha = 0.5,
+		alpha = 0.58,
 		label.col = c("grey28"),
 		cex = 2.5,
 		fontface = "bold",
@@ -841,21 +841,12 @@ OTU.name.Bac.physeq.prune.rarefy.SF = rownames((otu_table(Bac.physeq.prune.raref
 OTU.name.Bac.physeq.prune.rarefy.SUB = rownames((otu_table(Bac.physeq.prune.rarefy.SUB)))
 ```
 
-
-
-```{r}
-grid.draw(venn.plot)
-```
-
-
-
-
 ```{r}
 ## plot venn diagrams
       
 # Surface vs Subsurface
 pdf("./Figures/Bacteria_Surface_Subsurface_venn.pdf", width = 8, height = 8)
-ven_test = venn_diagram2(OTU.name.Bac.physeq.prune.rarefy.SF, OTU.name.Bac.physeq.prune.rarefy.SUB, "Surface", "Subsurface", colors= c("#E69F00","#56B4E9"), euler=TRUE, main = "Bacteria Surface-Subsurface Venn")
+ven_test = venn_diagram2(OTU.name.Bac.physeq.prune.rarefy.SF, OTU.name.Bac.physeq.prune.rarefy.SUB, "Surface", "Subsurface", colors= c("#009E73", "#CC79A7"), euler=TRUE, main = "Bacteria Surface-Subsurface Venn")
 dev.off()
 ```
 
