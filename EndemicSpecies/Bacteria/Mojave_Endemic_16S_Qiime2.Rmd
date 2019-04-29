@@ -1,7 +1,7 @@
 ---
 title: "Mojave_Endemic_16S_Qiime2"
 author: "Nat Pombubpa"
-date: "Updated on February 5, 2019"
+date: "Updated on April 29, 2019"
 output: html_document
 ---
 
@@ -219,6 +219,14 @@ physeq.prune.rarefy = rarefy_even_depth(physeq.prune, sample.size = 37386, repla
 physeq.prune.rarefy
 ```
 
+```{r}
+physeq.prune.rarefy = subset_taxa(physeq.prune.rarefy, Kingdom != "Rhizaria")
+physeq.prune.rarefy = subset_taxa(physeq.prune.rarefy, Kingdom != "Chromista")
+physeq.prune.rarefy = subset_taxa(physeq.prune.rarefy, Kingdom != "Unassigned")
+physeq.prune.rarefy = subset_taxa(physeq.prune.rarefy, Kingdom != "D_0__Eukaryota")
+physeq.prune.rarefy
+```
+
 ###STEP12:Merge samples by metadata 
 For endemic analysis, we would like to look for endemic species at each sites. Therefore, we will merge samples from each site together. For examples, all of samples from GMT will be merged into one group as GMT. After merging, there will be 4 groups which are GMT, KELSO, CIMA, and JTNP.
 
@@ -309,7 +317,7 @@ If this step work fine, you have successfully imported data to R and completely 
 
 ```{r warning=FALSE}
 set.seed(711)
-physeq.endemic.prune.rarefy = rarefy_even_depth(physeq.endemic.prune, sample.size = 1555, replace = FALSE, trimOTUs = TRUE)
+physeq.endemic.prune.rarefy = rarefy_even_depth(physeq.endemic.prune, sample.size = 1549, replace = FALSE, trimOTUs = TRUE)
 physeq.endemic.prune.rarefy
 ```
 
@@ -326,10 +334,21 @@ physeq.endemic.prune.rarefy.merge.sitelayer
 Results show 2 main phylum for endemic species which include Cynobacteria and Proteobacteria
 ```{r}
 Heatmap.sitelayer.endemic<- prune_taxa(names(sort(taxa_sums(physeq.endemic.prune.rarefy.merge.sitelayer),TRUE)[1:50]), physeq.endemic.prune.rarefy.merge.sitelayer)
-Heatmap.sitelayer.endemic.plot = plot_heatmap(Heatmap.sitelayer.endemic, "PCoA", "unifrac", "Site_layer", "Phylum")+ ggtitle("Bacterial endemic species heatmap (top 50 ASVs)") + theme(plot.title = element_text(hjust = 0.5))
+Heatmap.sitelayer.endemic.plot = plot_heatmap(Heatmap.sitelayer.endemic, "PCoA", "unifrac", "Site_layer", "Genus")+ ggtitle("Bacterial endemic species heatmap (top 50 ASVs)") + theme(plot.title = element_text(hjust = 0.5))
 print(Heatmap.sitelayer.endemic.plot)
 
-ggsave("/Volumes/GoogleDrive/My Drive/UCR2019/Mojave_project2019/MojaveCrusts_2019analysis/EndemicSpecies/Bacteria/Figures/Bacterial_endemic_species_heatmap_top50.png", plot = Heatmap.sitelayer.endemic.plot, width = 12, height = 8)
+ggsave("/Volumes/GoogleDrive/My Drive/UCR2019/Mojave_project2019/MojaveCrusts_2019analysis/EndemicSpecies/Bacteria/Figures/Bacterial_endemic_species_heatmap_top50_class.png", plot = Heatmap.sitelayer.endemic.plot, width = 12, height = 8)
+```
+```{r}
+tax_table(Heatmap.sitelayer.endemic)
+```
+
+```{r}
+Heatmap.sitelayer.endemic.class_taxglom = tax_glom(Heatmap.sitelayer.endemic, taxrank = "Class")
+```
+
+```{r}
+tax_table(Heatmap.sitelayer.endemic.class_taxglom)
 ```
 
 
