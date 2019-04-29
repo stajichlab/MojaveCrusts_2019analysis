@@ -1,0 +1,576 @@
+---
+title: "Mojave_Div_16S_Qiime2"
+author: "Nat Pombubpa"
+date: "Updated on April 25, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Mojave Endemic Bacteria
+This is documentation and codes for Bacterial diversity analysis in Mojave biocrust dataset.
+
+Otu table, taxonomy table, and tree were generated from Qiime2 using DADA2 and Silva database classifier extracted lenght (515-806). Note: Mitochondria and Chloroplast have been filterd and removed from OTU table.
+
+###STEP1: Load all necessary packages for analysis
+More information about Phyloseq can be found at the following link: [Phyloseq](https://joey711.github.io/phyloseq/)
+If you get error in this step, you probably need to install any packages which causes error.
+
+```{r warning=FALSE, message=FALSE}
+library(ape)
+library(vegan)
+library(plyr)
+library(dplyr)
+library(scales)
+library(grid)
+library(reshape2)
+library(phyloseq)
+library(magrittr)
+library(ggplot2)
+library(ggpubr)
+library(data.table)
+library(tidyr)
+library(tidyverse)
+library(multcompView)
+library(SpiecEasi)
+#library(ggnet)
+#library(intergraph)
+#library(remotes)
+library(igraph)
+library(circlize)
+```
+
+
+###STEP3: Import otu table for analysis using Phyloseq 
+
+```{r warning=FALSE}
+otus <- read.table("MojaveBacQ2FWLEsilva515806.otu_table.fix.txt",
+                   header=T,sep="\t",row.names = 1)
+otumat <- as(as.matrix(otus), "matrix")
+OTU = otu_table(otumat, taxa_are_rows = TRUE)
+```
+
+###STEP4: Import taxonomy table for analysis using Phyloseq
+This taxonomy table was created from STEP2.
+```{r warning=FALSE}
+taxmat <- read.csv("taxonomy_phyloseq_fix.csv", 
+                   sep=",",row.names=1)
+row.names(taxmat) = taxmat$OTU.ID
+taxmat <- as(as.matrix(taxmat),"matrix")
+TAX = tax_table(taxmat)
+```
+
+###STEP5: Import tree file for analysis using Phyloseq
+
+```{r warning=FALSE}
+treefile = "tree.nwk"
+tree = read.tree(treefile)
+```
+
+###STEP6: Import mapping file for analysis using Phyloseq
+
+1.Check mapping file before import to R, R will automatically change sample name that starts with number or contain “-” in sample name. If you get error in this step, you should check sample name first. 
+
+2.First column of first row should not start with #, R will not read the first row that starts with #
+
+3. You can choose which samples to include in analysis by indicating specific group in the column
+
+```{r warning=FALSE}
+meta = read.table("Mojave_mappingfile_8-Aug-2018.txt",
+                  header=TRUE,row.names=1,
+                  sep="\t",stringsAsFactors=FALSE)
+#meta <- meta[which(meta$Layer %in% c("Surface")),]
+```
+
+Check if your metadata file has been import successfully and correctly, the output will show a table of your metadata file (mapping file). *If you do not have header, you might start your first row with # (remove # and reload your mapping file).
+
+```{r}
+head(meta)
+```
+
+Construct sample_data-class using imported metadata
+```{r warning=FALSE}
+sampleData <- sample_data(meta)
+```
+
+###STEP7: Construct Phyloseq object
+To construct phyloseq object, otu table, taxonomy table, and sampleData are required. Phylogenetic tree can be included, but it is not necessary for constructing phyloseq object.
+Construct Phyloseq object called "Physeq"
+
+```{r warning=FALSE}
+physeq = phyloseq(OTU,TAX,sampleData,tree)
+```
+
+###STEP8: Check phyloseq object
+This should indicate that your physeq is a "phyloseq-class experiment-level object"
+
+```{r}
+physeq
+```
+
+###STEP9: Remove ASVs
+Remove any ASVs that present only 5 time.
+
+```{r}
+physeq.prune = prune_taxa(taxa_sums(physeq) > 5, physeq)
+```
+
+```{r}
+physeq.prune
+```
+
+###STEP10: Plot read counts to check dataset
+Check read counts: any samples that have very low reads should be removed.
+[Ref](http://evomics.org/wp-content/uploads/2016/01/phyloseq-Lab-01-Answers.html)
+
+```{r}
+readcount = data.table(as(sample_data(physeq.prune), "data.frame"),
+                 TotalReads = sample_sums(physeq.prune), 
+                 keep.rownames = TRUE)
+setnames(readcount, "rn", "SampleID")
+#For plotting, use command below.
+#SeqDepth = ggplot(readcount, aes(TotalReads)) + geom_histogram() + ggtitle("Sequencing Depth")
+```
+
+TotalReads of all the samples can be in this table (select only SampleID and TotalReads columns).
+In order to check samples with low number of reads, "order()" can be used to sort "TotalReads" column.
+In this dataset, N55.Rhizo has very low number of reads, so will will filter this sample out using the next minimum number of reads.
+```{r}
+readcount = readcount[order(readcount$TotalReads), c("SampleID", "TotalReads")]
+```
+
+```{r}
+head(readcount)
+```
+
+###STEP11: Rarefy OTUs to a minimum number of reads
+Rarefy OTUs (remove any samples that has very low number of reads)
+If this step work fine, you have successfully imported data to R and completely generate phyloseq object as "physeq.prune.rarefy".
+```{r warning=FALSE}
+set.seed(711)
+physeq.prune.rarefy = rarefy_even_depth(physeq.prune, sample.size = 37435, replace = FALSE, trimOTUs = TRUE)
+physeq.prune.rarefy
+```
+
+###Network analysis for bacteria only : SURFACE
+
+```{r}
+physeq.prune.rarefy.SF = subset_samples(physeq.prune.rarefy, Layer=="Surface")
+```
+
+```{r warning=FALSE}
+ps.taxglom.prune = prune_taxa(names(sort(taxa_sums(physeq.prune.rarefy), TRUE))[1:1000], physeq.prune.rarefy)
+set.seed(711L)
+psplotnet = plot_net(physeq.prune.rarefy.SF, distance = "bray", type = "taxa", laymeth = "circle", color = "Genus", point_label ="Genus", hjust = 0.2, maxdist = 0.2) + ggtitle("Biocrust Bacterial Community Network Analysis")  + theme(plot.title = element_text(hjust = 0.5))
+
+psplotnet
+```
+
+```{r}
+df = psplotnet$data
+df.v1 = data.frame(OTU1 = df$v1, stringsAsFactors = T )
+df.v2 = data.frame(OTU1 = df$v2, stringsAsFactors = T )
+df.v1.v2 = rbind(df.v1,df.v2)
+```
+
+```{r}
+tax.circlize <- read.table("taxonomy_phyloseq_fix.csv", header=T,sep=",")
+```
+
+construct data.frame by assigning "v1" to OTU1, "v2" to OTU2, and "Distance" to Similarity (using 1-dissimilarity (1-df$Distance))
+
+```{r}
+cdf = data.frame(OTU1 = df$v1, OTU2 = df$v2, Similarity = as.vector(1-df$Distance), stringsAsFactors = TRUE )
+```
+
+```{r}
+cdf.w.tax = data.frame(OTU1=tax.circlize[match(cdf$OTU1, tax.circlize$OTU.ID), 8], OTU2=tax.circlize[match(cdf$OTU2, tax.circlize$OTU.ID), 8], Similarity=cdf$Similarity, stringsAsFactors = FALSE)
+```
+
+```{r}
+cdf.w.tax
+```
+
+```{r}
+cdf.w.tax$OTU1 <- as.character(cdf.w.tax$OTU1)
+cdf.w.tax$OTU2 <- as.character(cdf.w.tax$OTU2)
+```
+
+
+```{r}
+str(cdf.w.tax)
+```
+
+
+```{r}
+cdf.w.tax[is.na(cdf.w.tax)] <- "unidentified"
+```
+
+clear any object that might be drawn by circlize before.
+
+```{r}
+circos.clear()
+```
+
+Plot network from "cdf" data frame that was constructed from Phyloseq plot network
+
+link.visible: plot any of the collumn#3 that similarity is greater than certain number in this case 0.8.
+for (si in get.all.setor.index()) is used to re-label OTUs name, so they are not on top of each others. (You can try plotting without for (si in get.all.setor.index()) to see how it would look )
+
+```{r}
+chordDiagram(cdf.w.tax, annotationTrack = "grid", annotationTrackHeight = 0.01, preAllocateTracks = 1, link.visible = cdf.w.tax[[3]] > 0.85) 
+for(si in get.all.sector.index()) {
+    xlim = get.cell.meta.data("xlim", sector.index = si, track.index = 1)
+    ylim = get.cell.meta.data("ylim", sector.index = si, track.index = 1)
+    circos.text(mean(xlim), ylim[1], si, facing = "clockwise", adj = c(-0.1, -0.2),
+    niceFacing = TRUE, cex = 1.2, col = "black", sector.index = si, track.index = 1)
+} 
+
+circos.clear()
+```
+
+```{r}
+pdf("Figures/Biocrust Bacterial Community Network Analysis.pdf", width = 18, height = 18)
+chordDiagram(cdf.w.tax, annotationTrack = "grid", annotationTrackHeight = 0.01, preAllocateTracks = 1, link.visible = cdf.w.tax[[3]] > 0.85) 
+for(si in get.all.sector.index()) {
+    xlim = get.cell.meta.data("xlim", sector.index = si, track.index = 1)
+    ylim = get.cell.meta.data("ylim", sector.index = si, track.index = 1)
+    circos.text(mean(xlim), ylim[1], si, facing = "clockwise", adj = c(-0.1, -0.2),
+    niceFacing = TRUE, cex = 1.2, col = "black", sector.index = si, track.index = 1)
+} 
+
+title(main = "Biocrust Bacterial Community Network Analysis")
+circos.clear()
+dev.off()
+```
+
+
+
+
+###SpiecEasi Test
+
+####Bacteria
+```{r warning=FALSE}
+Bac.otus <- read.table("MC2018.network.BAC.otu_table.csv",
+                   header=T,sep=",",row.names = 1)
+Bac.otumat <- as(as.matrix(Bac.otus), "matrix")
+Bac.OTU = otu_table(Bac.otumat, taxa_are_rows = TRUE)
+```
+
+```{r}
+Bac.taxmat <- read.table("BAC.network.taxonomy.csv", header=T,sep=",",row.names=1)
+Bac.taxmat <- as(as.matrix(Bac.taxmat),"matrix")
+Bac.TAX = tax_table(Bac.taxmat)
+```
+
+```{r warning=FALSE}
+meta = read.table("Mojave_mappingfile_8-Aug-2018.txt",
+                  header=TRUE,row.names=1,
+                  sep="\t",stringsAsFactors=FALSE)
+```
+
+```{r warning=FALSE}
+sampleData <- sample_data(meta)
+```
+
+```{r warning=FALSE}
+Bac.physeq = phyloseq(Bac.OTU,Bac.TAX,sampleData)
+```
+
+```{r}
+Bac.physeq.prune = prune_taxa(taxa_sums(Bac.physeq) > 5, Bac.physeq)
+```
+
+```{r warning=FALSE}
+set.seed(711)
+Bac.physeq.prune.rarefy = rarefy_even_depth(Bac.physeq.prune, sample.size = 37435, replace = FALSE, trimOTUs = TRUE)
+Bac.physeq.prune.rarefy
+```
+
+```{r}
+Bac.physeq.prune.rarefy.SF = subset_samples(Bac.physeq.prune.rarefy, Layer=="Surface")
+```
+
+```{r}
+Bac.physeq.prune.rarefy.SUB = subset_samples(Bac.physeq.prune.rarefy, Layer=="Subsurface")
+```
+
+####Fungi
+```{r}
+Fun.otus <- read.table("MC2018.network.FG.otu_table.csv",header=T,sep=",",row.names=1)
+Fun.otumat <- as(as.matrix(Fun.otus), "matrix")
+Fun.OTU = otu_table(Fun.otumat, taxa_are_rows = TRUE)
+```
+
+```{r}
+Fun.taxmat <- read.table("FG.network.taxonomy.csv", header=T,sep=",",row.names=1)
+Fun.taxmat <- as(as.matrix(Fun.taxmat),"matrix")
+Fun.TAX = tax_table(Fun.taxmat)
+```
+
+```{r warning=FALSE}
+Fun.physeq = phyloseq(Fun.OTU,Fun.TAX,sampleData)
+```
+
+```{r }
+Fun.physeq.prune = prune_taxa(taxa_sums(Fun.physeq) > 1, Fun.physeq)
+```
+
+```{r warning=FALSE}
+set.seed(1)
+Fun.physeq.prune.rarefy = rarefy_even_depth(Fun.physeq.prune, sample.size = 6842, replace = FALSE, trimOTUs = FALSE)
+Fun.physeq.prune.rarefy
+```
+
+```{r}
+Fun.physeq.prune.rarefy.SF = subset_samples(Fun.physeq.prune.rarefy, Layer=="Surface")
+```
+
+```{r}
+Fun.physeq.prune.rarefy.SUB = subset_samples(Fun.physeq.prune.rarefy, Layer=="Subsurface")
+```
+
+###SpiecEasi Cross Domain
+
+```{r}
+Bac.physeq.prune.rarefy.SF = subset_taxa(Bac.physeq.prune.rarefy.SF, Kingdom != "Rhizaria")
+Bac.physeq.prune.rarefy.SF = subset_taxa(Bac.physeq.prune.rarefy.SF, Kingdom != "Chromista")
+Bac.physeq.prune.rarefy.SF = subset_taxa(Bac.physeq.prune.rarefy.SF, Kingdom != "Unassigned")
+Bac.physeq.prune.rarefy.SF = subset_taxa(Bac.physeq.prune.rarefy.SF, Kingdom != "D_0__Eukaryota")
+Bac.physeq.prune.rarefy.SF
+```
+
+```{r}
+Fun.physeq.prune.rarefy.SF = subset_taxa(Fun.physeq.prune.rarefy.SF, Kingdom != "Rhizaria")
+Fun.physeq.prune.rarefy.SF = subset_taxa(Fun.physeq.prune.rarefy.SF, Kingdom != "Chromista")
+Fun.physeq.prune.rarefy.SF = subset_taxa(Fun.physeq.prune.rarefy.SF, Kingdom != "Unassigned")
+Fun.physeq.prune.rarefy.SF = subset_taxa(Fun.physeq.prune.rarefy.SF, Kingdom != "D_0__Eukaryota")
+Fun.physeq.prune.rarefy.SF = subset_taxa(Fun.physeq.prune.rarefy.SF, Kingdom != "NA")
+Fun.physeq.prune.rarefy.SF
+```
+
+```{r}
+Bac.physeq.prune.rarefy.SF.top100 = prune_taxa(names(sort(taxa_sums(Bac.physeq.prune.rarefy.SF), TRUE))[1:50], Bac.physeq.prune.rarefy.SF)
+```
+
+```{r}
+Fun.physeq.prune.rarefy.SF.top100 = prune_taxa(names(sort(taxa_sums(Fun.physeq.prune.rarefy.SF), TRUE))[1:50], Fun.physeq.prune.rarefy.SF)
+```
+
+```{r}
+pargs <- list(rep.num = 50, seed = 10010, ncores = 6)
+FG.Bac.network <- spiec.easi(list(Bac.physeq.prune.rarefy.SF.top100, Fun.physeq.prune.rarefy.SF.top100), method='glasso', nlambda=40,
+              lambda.min.ratio=1e-2, pulsar.params = pargs)
+```
+
+###Plot result from Spiec-Easi
+```{r}
+dtype <- c(rep(1,ntaxa(Bac.physeq.prune.rarefy.SF.top100)), rep(2,ntaxa(Fun.physeq.prune.rarefy.SF.top100)))
+plot(adj2igraph(getRefit(FG.Bac.network), rmEmptyNodes=TRUE), vertex.color=dtype+1, vertex.size=6, vertex.label=NULL)
+```
+
+```{r}
+FG.BAC.top100.merged = merge_phyloseq(Bac.physeq.prune.rarefy.SF.top100, Fun.physeq.prune.rarefy.SF.top100)
+FG.BAC.top100.merged
+```
+
+```{r}
+tax_table(FG.BAC.top100.merged)
+```
+
+###Plot using phyloseq
+```{r}
+ig2.mb <- adj2igraph(getRefit(FG.Bac.network), rmEmptyNodes=TRUE, vertex.attr=list(name=taxa_names(FG.BAC.top100.merged)))
+
+psplotnet = plot_network(ig2.mb, FG.BAC.top100.merged, type='taxa', color="Phylum", label = "Genus",shape = "Kingdom", hjust = 0.5) 
+psplotnet 
+```
+
+
+```{r}
+net.df = as_long_data_frame(ig2.mb)
+```
+
+```{r}
+net.df
+```
+
+```{r}
+cdf = data.frame(OTU1 = net.df$`ver[el[, 1], ]`, OTU2 = net.df$`ver2[el[, 2], ]`, WEIGHT = as.vector(net.df$weight), stringsAsFactors = TRUE )
+cdf
+```
+
+```{r}
+Bac.net.taxmat <- read.table("BAC.network.taxonomy.csv", header=T,sep=",")
+Fun.net.taxmat <- read.table("FG.network.taxonomy.csv", header=T,sep=",")
+tax.circlize = rbind(Fun.net.taxmat,Bac.net.taxmat)
+head(tax.circlize)
+```
+
+
+
+```{r}
+cdf.w.tax = data.frame(OTU1=tax.circlize[match(cdf$OTU1, tax.circlize$OTU.ID), 7], OTU2=tax.circlize[match(cdf$OTU2, tax.circlize$OTU.ID), 7], WEIGHT=cdf$WEIGHT)
+cdf.w.tax
+```
+
+```{r}
+cdf.w.tax$OTU1 <- as.character(cdf.w.tax$OTU1)
+cdf.w.tax$OTU2 <- as.character(cdf.w.tax$OTU2)
+str(cdf.w.tax)
+```
+
+```{r}
+cdf.w.tax[is.na(cdf.w.tax)] <- "unidentified"
+```
+
+clear any object that might be drawn by circlize before.
+
+```{r}
+circos.clear()
+```
+
+Plot network from "cdf" data frame that was constructed from Phyloseq plot network
+
+link.visible: plot any of the collumn#3 that similarity is greater than certain number in this case 0.8.
+for (si in get.all.setor.index()) is used to re-label OTUs name, so they are not on top of each others. (You can try plotting without for (si in get.all.setor.index()) to see how it would look )
+
+```{r}
+chordDiagram(cdf.w.tax, annotationTrack = "grid", annotationTrackHeight = 0.01, preAllocateTracks = 1, link.visible = cdf.w.tax[[3]] > 0.85) 
+for(si in get.all.sector.index()) {
+    xlim = get.cell.meta.data("xlim", sector.index = si, track.index = 1)
+    ylim = get.cell.meta.data("ylim", sector.index = si, track.index = 1)
+    circos.text(mean(xlim), ylim[1], si, facing = "clockwise", adj = c(-0.1, -0.2),
+    niceFacing = TRUE, cex = 1.2, col = "black", sector.index = si, track.index = 1)
+} 
+
+circos.clear()
+```
+
+```{r}
+pdf("Figures/Biocrust Fungal-Bacteria Community Network Analysis.pdf", width = 18, height = 18)
+chordDiagram(cdf.w.tax, annotationTrack = "grid", annotationTrackHeight = 0.01, preAllocateTracks = 1, link.visible = cdf.w.tax[[3]] > 0.85) 
+for(si in get.all.sector.index()) {
+    xlim = get.cell.meta.data("xlim", sector.index = si, track.index = 1)
+    ylim = get.cell.meta.data("ylim", sector.index = si, track.index = 1)
+    circos.text(mean(xlim), ylim[1], si, facing = "clockwise", adj = c(-0.1, -0.2),
+    niceFacing = TRUE, cex = 1.2, col = "black", sector.index = si, track.index = 1)
+} 
+
+title(main = "Biocrust Fungal-Bacterial Community Network Analysis")
+circos.clear()
+dev.off()
+```
+
+
+```{r}
+ig2.mb <- adj2igraph(getRefit(FG.Bac.network), rmEmptyNodes=TRUE, vertex.attr=list(name=taxa_names(FG.BAC.top100.merged)))
+
+psplotnet = plot_network(ig2.mb, FG.BAC.top100.merged, type='taxa', color="Phylum", shape = "Kingdom", label = NULL, hjust = 0.5, layout.method=layout.circle) 
+psplotnet 
+```
+
+
+```{r}
+pdf("Figures/Biocrust Microbial Community Network Analysis Surface test.pdf", width = 10, height = 8)
+psplotnet
+dev.off()
+```
+
+
+```{r}
+ig2.mb.dl=delete.vertices(ig2.mb,which(degree(ig2.mb)<1))
+```
+
+
+```{r}
+stl.mb <- degree.distribution(ig2.mb)
+plot(0:(length(stl.mb)-1), stl.mb, ylim=c(0,.35), type='b', 
+      ylab="Frequency", xlab="Degree", main="Degree Distributions")
+```
+
+
+
+
+```{r}
+Bac.physeq.prune.rarefy.LAC = subset_samples(Bac.physeq.prune.rarefy.SF, Crust_type=="LAC")
+```
+
+```{r}
+Bac.physeq.prune.rarefy.LAC.Sub = subset_samples(Bac.physeq.prune.rarefy.SUB, Crust_type=="LAC.Sub")
+```
+
+```{r}
+Fun.physeq.prune.rarefy.LAC = subset_samples(Fun.physeq.prune.rarefy.SF, Crust_type=="LAC")
+```
+
+```{r}
+Fun.physeq.prune.rarefy.LAC.Sub = subset_samples(Fun.physeq.prune.rarefy.SUB, Crust_type=="LAC.Sub")
+```
+
+
+## filter taxa that appear in fewer than 30% of the samples
+```{r}
+Bac.physeq.prune.rarefy.LAC.filt <- prune_taxa(rowSums(sign(Bac.physeq.prune.rarefy.LAC@otu_table@.Data)) > nsamples(Bac.physeq.prune.rarefy.LAC)*.3, Bac.physeq.prune.rarefy.LAC)
+Bac.physeq.prune.rarefy.LAC.filt
+```
+
+```{r}
+Fun.physeq.prune.rarefy.LAC.filt <- prune_taxa(rowSums(sign(Fun.physeq.prune.rarefy.LAC@otu_table@.Data)) > nsamples(Fun.physeq.prune.rarefy.LAC)*.3, Fun.physeq.prune.rarefy.LAC)
+Fun.physeq.prune.rarefy.LAC.filt
+```
+
+```{r}
+FG.BAC.LAC.filt.merged = merge_phyloseq(Fun.physeq.prune.rarefy.LAC.filt, Bac.physeq.prune.rarefy.LAC.filt)
+FG.BAC.LAC.filt.merged
+```
+
+```{r}
+Bac.physeq.prune.rarefy.LAC.top100 = prune_taxa(names(sort(taxa_sums(Bac.physeq.prune.rarefy.LAC), TRUE))[1:100], Bac.physeq.prune.rarefy.LAC)
+```
+
+```{r}
+Fun.physeq.prune.rarefy.LAC.top100 = prune_taxa(names(sort(taxa_sums(Fun.physeq.prune.rarefy.LAC), TRUE))[1:100], Fun.physeq.prune.rarefy.LAC)
+```
+
+```{r}
+FG.BAC.LAC.top100.merged = merge_phyloseq(Bac.physeq.prune.rarefy.LAC.top100, Fun.physeq.prune.rarefy.LAC.top100)
+FG.BAC.LAC.top100.merged
+```
+
+```{r}
+pargs <- list(rep.num = 50, seed = 10010, ncores = 8)
+FG.Bac.LAC.network <- spiec.easi(list(Fun.physeq.prune.rarefy.LAC.top100, Bac.physeq.prune.rarefy.LAC.top100), method='glasso', nlambda=1000,lambda.min.ratio=1e-1, pulsar.params = pargs)
+```
+
+```{r}
+getStability(FG.Bac.LAC.network)
+```
+```{r}
+ig2.mb <- adj2igraph(getRefit(FG.Bac.network), rmEmptyNodes=TRUE, vertex.attr=list(name=taxa_names(FG.BAC.top100.merged)))
+
+psplotnet = plot_network(ig2.mb, FG.BAC.top100.merged, type='taxa', color="Phylum", label = "Genus",shape = "Kingdom", hjust = 0.5) 
+psplotnet 
+```
+
+
+```{r}
+LAC.network <- adj2igraph(getRefit(FG.Bac.LAC.network), rmEmptyNodes=T, vertex.attr=list(name=taxa_names(FG.BAC.LAC.top100.merged)))
+
+psplotnet.LAC = plot_network(LAC.network, FG.BAC.LAC.top100.merged, type='taxa', color="Phylum", label = "Genus",shape = "Kingdom", hjust = 0.5) 
+psplotnet.LAC 
+```
+
+
+
+
+
+
+
+
+
+
+
+

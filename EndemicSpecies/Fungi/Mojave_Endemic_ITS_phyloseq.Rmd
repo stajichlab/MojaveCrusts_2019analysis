@@ -1,7 +1,7 @@
 ---
 title: "Mojave_Endemic_ITS_phyloseq"
 author: "Nat Pombubpa"
-date: "Updated on February 6, 2019"
+date: "Updated on April 29, 2019"
 output: html_document
 ---
 
@@ -270,14 +270,42 @@ physeq.endemic.prune.rarefy.merge.sitelayer
 ```
 
 ###STEP21:Plot heatmap for all fungal endemic species
-Results show 2 main phylum for endemic species which include Ascomycota and Basidiomycota
 ```{r}
 Heatmap.sitelayer.endemic<- prune_taxa(names(sort(taxa_sums(physeq.endemic.prune.rarefy.merge.sitelayer),TRUE)[1:50]), physeq.endemic.prune.rarefy.merge.sitelayer)
-Heatmap.sitelayer.endemic.plot = plot_heatmap(Heatmap.sitelayer.endemic, "PCoA", "bray", "Site_layer", "Phylum")+ ggtitle("Fungal endemic species heatmap (top 50 OTUs)") + theme(plot.title = element_text(hjust = 0.5))
+Heatmap.sitelayer.endemic
+```
+
+
+```{r}
+badTaxa = c("OTU58",  "OTU125",  "OTU254",  "OTU639")
+goodTaxa <- setdiff(taxa_names(Heatmap.sitelayer.endemic), badTaxa)
+Heatmap.sitelayer.endemic2 <- prune_taxa(goodTaxa, Heatmap.sitelayer.endemic)
+Heatmap.sitelayer.endemic2
+```
+
+
+Results show 2 main phylum for endemic species which include Ascomycota and Basidiomycota
+```{r}
+Heatmap.sitelayer.endemic.plot = plot_heatmap(Heatmap.sitelayer.endemic2, "PCoA", "bray", "Site_layer", "Order")+ ggtitle("Fungal endemic species heatmap (top 50 OTUs)") + theme(plot.title = element_text(hjust = 0.5))
 print(Heatmap.sitelayer.endemic.plot)
 
-ggsave("/Volumes/GoogleDrive/My Drive/UCR2019/Mojave_project2019/MojaveCrusts_2019analysis/EndemicSpecies/Fungi/Figures/Fungal_endemic_species_heatmap_top50.png", plot = Heatmap.sitelayer.endemic.plot, width = 12, height = 8)
+ggsave("/Volumes/GoogleDrive/My Drive/UCR2019/Mojave_project2019/MojaveCrusts_2019analysis/EndemicSpecies/Fungi/Figures/Fungal_endemic_species_heatmap_top50_Order.png", plot = Heatmap.sitelayer.endemic.plot, width = 12, height = 8)
 ```
+
+```{r}
+Heatmap.sitelayer.endemic2.order_taxglom = tax_glom(Heatmap.sitelayer.endemic2, taxrank = "Order")
+#Heatmap.sitelayer.endemic2.order_taxglom.plot = plot_heatmap(Heatmap.sitelayer.endemic2.order_taxglom, "PCoA", "bray", "Site_layer", "Order")+ ggtitle("Fungal endemic species heatmap (top 50 OTUs taxglom order)") + theme(plot.title = element_text(hjust = 0.5))
+#print(Heatmap.sitelayer.endemic2.order_taxglom.plot)
+```
+
+```{r}
+tax_table(Heatmap.sitelayer.endemic2.order_taxglom)
+```
+
+```{r}
+tax_table(Heatmap.sitelayer.endemic)
+```
+
 
 ###STEP22.1:Plot heatmap for Ascomycota endemic species
 ```{r}
