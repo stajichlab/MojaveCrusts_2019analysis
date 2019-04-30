@@ -85,23 +85,32 @@ Fun.physeq.prune.rarefy.SF = subset_samples(Fun.physeq.prune.rarefy, Layer=="Sur
 ## Fungal phyloseq object for subsurface subset
 Fun.physeq.prune.rarefy.SUB = subset_samples(Fun.physeq.prune.rarefy, Layer=="Subsurface")
 
+## filter taxa that appear in fewer than 30% of the samples
+
+Bac.physeq.prune.rarefy.SF.filt <- prune_taxa(rowSums(sign(Bac.physeq.prune.rarefy.SF@otu_table@.Data)) > nsamples(Bac.physeq.prune.rarefy.SF)*.3, Bac.physeq.prune.rarefy.SF)
+Bac.physeq.prune.rarefy.SF.filt
+
+Fun.physeq.prune.rarefy.SF.filt <- prune_taxa(rowSums(sign(Fun.physeq.prune.rarefy.SF@otu_table@.Data)) > nsamples(Fun.physeq.prune.rarefy.SF)*.3, Fun.physeq.prune.rarefy.SF)
+Fun.physeq.prune.rarefy.SF.filt
+
+
 ## Bacterial phyloseq object for surface subset (top 100 ASV)
-Bac.physeq.prune.rarefy.SF.top100 = prune_taxa(names(sort(taxa_sums(Bac.physeq.prune.rarefy.SF), TRUE))[1:38], Bac.physeq.prune.rarefy.SF)
+#Bac.physeq.prune.rarefy.SF.top100 = prune_taxa(names(sort(taxa_sums(Bac.physeq.prune.rarefy.SF), TRUE))[1:38], Bac.physeq.prune.rarefy.SF)
 
 ## Fungal phyloseq object for surface subset (top 100 ASV)
-Fun.physeq.prune.rarefy.SF.top100 = prune_taxa(names(sort(taxa_sums(Fun.physeq.prune.rarefy.SF), TRUE))[1:38], Fun.physeq.prune.rarefy.SF)
+#Fun.physeq.prune.rarefy.SF.top100 = prune_taxa(names(sort(taxa_sums(Fun.physeq.prune.rarefy.SF), TRUE))[1:38], Fun.physeq.prune.rarefy.SF)
 
 ## Network analysis using SpiecEasi
 pargs <- list(rep.num = 50, seed = 10010, ncores = 6)
-FG.Bac.network <- spiec.easi(list(Bac.physeq.prune.rarefy.SF.top100, Fun.physeq.prune.rarefy.SF.top100), method='glasso', nlambda=40,
+FG.Bac.network <- spiec.easi(list(Bac.physeq.prune.rarefy.SF.filt, Fun.physeq.prune.rarefy.SF.filt), method='glasso', nlambda=40,
               lambda.min.ratio=1e-2, pulsar.params = pargs)
 
 ## Merged Bacterial and Fungal Phyloseq objects for combined taxnomic data
-FG.BAC.top100.merged = merge_phyloseq(Bac.physeq.prune.rarefy.SF.top100, Fun.physeq.prune.rarefy.SF.top100)
-FG.BAC.top100.merged
+FG.BAC.filt.merged = merge_phyloseq(Bac.physeq.prune.rarefy.SF.filt, Fun.physeq.prune.rarefy.SF.filt)
+FG.BAC.filt.merged
 
 ## Create igraph object from SpiecEasi network
-easi.fun.bac.net <- adj2igraph(getRefit(FG.Bac.network), rmEmptyNodes=TRUE, vertex.attr=list(name=taxa_names(FG.BAC.top100.merged)))
+easi.fun.bac.net <- adj2igraph(getRefit(FG.Bac.network), rmEmptyNodes=TRUE, vertex.attr=list(name=taxa_names(FG.BAC.filt.merged)))
 
 ## Extract dataframe from igraph
 net.df = as_long_data_frame(easi.fun.bac.net)
