@@ -655,10 +655,33 @@ dev.off()
 
 
 
+##Lichen
+
+```{r}
+physeq.prune.rarefy.Lecanoromycetes = subset_taxa(physeq.prune.rarefy, Class == "Lecanoromycetes")
+physeq.prune.rarefy.Lecanoromycetes
+```
+
+```{r}
+plot_bar(physeq.prune.rarefy.Lecanoromycetes, x = "Crust_type", fill = "Order")
+```
 
 
+```{r fig.height=5, fig.width=8, fig.align="center"}
+taxcom_Lecanoromycetes = ggplot(data = psmelt(physeq.prune.rarefy.Lecanoromycetes), mapping = aes_string(x = "Crust_type" ,
+                                                                                                         y = "Abundance", fill = "Order" )) + 
+  geom_bar(stat="identity", position="fill") + 
+  ggtitle("Lecanoromycetes Taxonomic Composition (Order level) by Crust_type")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+print(taxcom_Lecanoromycetes)
+```
 
+```{r}
+pdf("./Figures/taxcom_Lecanoromycetes.pdf", width = 8, height = 5)
+taxcom_Lecanoromycetes
+dev.off()
 
+```
 
 
 

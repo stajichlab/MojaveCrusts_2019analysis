@@ -855,10 +855,78 @@ dev.off()
 ven_test$Surface_Subsurface
 ```
 
-
-
-
 ```{r}
 str(a)
 ```
+
+
+### Idndicative Species
+#Convert phyloseq OTU table to reflect species
+
+```{r}
+#phyloGlom = tax_glom(fun.nov.control,taxrank = "Species")
+Bac.physeq.prune.rarefy.SF = prune_taxa(taxa_sums(Bac.physeq.prune.rarefy.SF) > 5, Bac.physeq.prune.rarefy.SF)
+BacTax = tax_table(Bac.physeq.prune.rarefy.SF)[,"Species"]
+BacOTU = otu_table(Bac.physeq.prune.rarefy.SF)
+BacTable = merge(BacOTU,BacTax,by=0,all=TRUE)
+rownames(BacTable) = make.names(BacTable[,"Row.names"],unique = T)
+BacTable$Row.names = NULL
+BacTable$Species = NULL
+```
+
+```{r}
+BacTable
+```
+
+
+###Transpose Rows and columns for desired labdsv format
+
+```{r}
+ASV.bac <- t(BacTable)
+```
+
+
+#Remove columns with 0 species counts
+
+```{r}
+ASV.bac.no.zero <- ASV.bac[, colSums(ASV.bac != 0) > 0]
+```
+
+###Subset sampleData phyloseq object for the desired variable (e.g. treatment, depth, crust type, etc.)
+
+```{r}
+ASV.bac.groups <- subset(sample_data(Bac.physeq.prune.rarefy.SF),select = "Crust_type")
+ASV.bac.groups
+```
+
+###Make the varible numeric
+
+```{r}
+ASV.bac.groups$Crust_type = factor(ASV.bac.groups$Crust_type)
+ASV.bac.groups$Crust_type = as.numeric(ASV.bac.groups$Crust_type)
+ASV.bac.groups
+```
+
+##Run indval code from lab.dsv 
+
+```{r}
+Bac.indic.species <- indval(ASV.bac.no.zero,ASV.bac.groups$Crust_type)
+head(Bac.indic.species)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
