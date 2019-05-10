@@ -1,7 +1,7 @@
 ---
 title: "Network_test"
 author: "Nat Pombubpa"
-date: "4/29/2019"
+date: "5/8/2019"
 output: html_document
 ---
 
@@ -13,6 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(phyloseq)
 library(SpiecEasi)
 library(igraph)
+library(ggplot2)
 ```
 
 ###SpiecEasi Test
@@ -115,6 +116,8 @@ Fun.physeq.prune.rarefy.SF = subset_samples(Fun.physeq.prune.rarefy, Layer=="Sur
 Fun.physeq.prune.rarefy.SUB = subset_samples(Fun.physeq.prune.rarefy, Layer=="Subsurface")
 ```
 
+
+
 ###SpiecEasi Cross Domain
 
 ```{r}
@@ -152,5 +155,44 @@ cdf
 
 ```{r}
 write.csv(cdf, file="EasiFunBacNet.csv")
+```
+
+
+###Load rda for plot
+
+```{r}
+#Bac.physeq.prune.rarefy.LAC.SF = subset_samples(Bac.physeq.prune.rarefy, Crust_type=="LAC")
+Bac.physeq.prune.rarefy.SF.top200 = prune_taxa(names(sort(taxa_sums(Bac.physeq.prune.rarefy.SF), TRUE))[1:200], Bac.physeq.prune.rarefy.SF)
+```
+
+```{r}
+#Fun.physeq.prune.rarefy.LAC.SF = subset_samples(Fun.physeq.prune.rarefy, Crust_type=="LAC")
+Fun.physeq.prune.rarefy.SF.top200 = prune_taxa(names(sort(taxa_sums(Fun.physeq.prune.rarefy.SF), TRUE))[1:200], Fun.physeq.prune.rarefy.SF)
+```
+
+```{r}
+FG.BAC.SF.merged = merge_phyloseq(Bac.physeq.prune.rarefy.SF.top200, Fun.physeq.prune.rarefy.SF.top200)
+```
+
+```{r}
+load(file = "easi.fun.bac.SF.all.e2L40.net.rda")
+```
+
+
+```{r}
+set.seed(12345)
+psplotnet.phylum = plot_network(easi.fun.bac.SF.net, FG.BAC.SF.merged, type='taxa', color="Phylum", label = "Genus" ,shape = "Kingdom", hjust = 0.5)
+```
+
+
+```{r}
+psplotnet.phylum + ggtitle("Mojave Biocrust Microbial Community Network Analysis (Surface)")
+```
+
+
+```{r}
+pdf("Figures/DOE.label.Biocrust_Microbial_Community_Network_Analysis_Surface_top_200.phylum.pdf", width = 15, height = 10)
+psplotnet.phylum + ggtitle("Mojave Biocrust Microbial Community Network Analysis (Surface)") + theme(plot.title = element_text(hjust = 0.5))
+dev.off()
 ```
 
