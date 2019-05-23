@@ -67,7 +67,7 @@ circos.clear()
 ```
 
 ```{r}
-pdf("Figures/Biocrust Fungal-Bacteria Community Network Analysis (Surface top 100 OTUs-cross only).pdf", width = 18, height = 18)
+pdf("Figures/DOE.Biocrust Fungal-Bacteria Community Network Analysis (Surface top 100 OTUs-cross only).pdf", width = 18, height = 18)
 chordDiagram(cdf.w.tax, annotationTrack = "grid", annotationTrackHeight = 0.01, preAllocateTracks = 1, link.visible = cdf.w.tax[[3]] > 0.85) 
 for(si in get.all.sector.index()) {
     xlim = get.cell.meta.data("xlim", sector.index = si, track.index = 1)

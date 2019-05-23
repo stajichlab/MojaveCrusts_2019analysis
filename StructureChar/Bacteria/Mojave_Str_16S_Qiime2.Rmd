@@ -1,7 +1,7 @@
 ---
 title: "Mojave_Str_16S_Qiime2"
 author: "Nat Pombubpa"
-date: "Updated on March 5, 2019"
+date: "Updated on May 23, 2019"
 output: html_document
 ---
 
@@ -307,3 +307,20 @@ pscrusttype
 dev.off()
 ```
 
+### Beta Div Central Mojave by Crust type
+
+```{r}
+physeq.prune.x = prune_taxa(taxa_sums(physeq) > 15, physeq)
+physeq.prune.x.Central.Mojave = subset_samples(physeq.prune.x, Site == "JTNP")
+physeq.prune.x.Central.Mojave.ord <- ordinate(physeq.prune.x.Central.Mojave, "PCoA", "unifrac")
+```
+
+```{r}
+sample_data(physeq.prune.x.Central.Mojave)$Crust_type = factor(sample_data(physeq.prune.x.Central.Mojave)$Crust_type, levels = c("LAC","CLC", "GLC", "RMC", "SMC", "LAC.Sub","CLC.Sub", "GLC.Sub", "RMC.Sub", "SMC.Sub"))
+```
+
+```{r}
+pscrusttype.CentralMojave = plot_ordination(physeq.prune.x.Central.Mojave, physeq.prune.x.Central.Mojave.ord, type = "samples", color = "Crust_type", shape = "Layer") + ggtitle("Bacterial Beta Diversity Central Mojave (PCoA) by Crust_type") + theme(plot.title = element_text(hjust = 0.5)) + annotate("text", x = -0.25, y = 0.28, label = "PERMANOVA, p = 0.001") + geom_point(size=5) + scale_colour_manual(values = c("#000000", "#E69F00", "#56B4E9", "#009E73", "#CC79A7", "#000000", "#E69F00", "#56B4E9", "#009E73", "#CC79A7")) #+ stat_ellipse(geom = "polygon", type = "t", alpha = 1/12, aes(fill = Site_layer)) 
+
+pscrusttype.CentralMojave
+```
