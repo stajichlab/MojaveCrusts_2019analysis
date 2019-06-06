@@ -1,0 +1,27 @@
+group,Taxonomy,Confidence.Ranking,Trophic.Mode,Guild,Growth.Morphology
+1,"SS|0.6200|KU721772|SH203068.07FU;k:Fungi,p:Ascomycota,c:Dothideomycetes,o:Pleosporales,f:Sporormiaceae",Probable,Saprotroph,Dung Saprotroph-Plant Saprotroph,Microfungus
+1,"US|0.0092|None;k:Fungi,p:Ascomycota,c:Eurotiomycetes,o:Eurotiales",Possible,Saprotroph,Undefined Saprotroph,Microfungus
+1,"GS|100.0|KP101184|SH219124.07FU;k:Fungi,p:Ascomycota,c:Dothideomycetes,o:Pleosporales,f:Sporormiaceae,g:Preussia,s:Preussia terricola",Probable,Saprotroph,Dung Saprotroph-Plant Saprotroph,Microfungus
+1,"GS|100.0|MF055700|SH193471.07FU;k:Fungi,p:Ascomycota,c:Dothideomycetes,o:Pleosporales,g:Thyrostroma",Probable,Pathotroph,Plant Pathogen,Microfungus
+1,"US|0.0209|None;k:Fungi,p:Ascomycota,c:Eurotiomycetes,o:Eurotiales",Possible,Saprotroph,Undefined Saprotroph,Microfungus
+2,"GS|98.2|KJ001441|SH032806.07FU;k:Fungi,p:Basidiomycota,c:Agaricomycetes,o:Agaricales,f:Entolomataceae,g:Entoloma,s:Entoloma halophilum",Possible,Pathotroph-Saprotroph-Symbiotroph,Ectomycorrhizal-Fungal Parasite-Soil Saprotroph-Undefined Saprotroph,Agaricoid
+2,"GS|100.0|JN885554|SH200713.07FU;k:Fungi,p:Ascomycota,c:Dothideomycetes,o:Capnodiales,f:Teratosphaeriaceae,g:Friedmanniomyces,s:Friedmanniomyces endolithicus",Probable,Pathotroph-Saprotroph,Animal Pathogen-Plant Pathogen-Undefined Saprotroph,NULL
+3,"GS|100.0|FM163616|SH187566.07FU;k:Fungi,p:Ascomycota,c:Dothideomycetes,o:Pleosporales,f:Pleosporaceae,g:Curvularia,s:Curvularia inaequalis",Probable,Pathotroph,Plant Pathogen,NULL
+3,"SS|0.6400|LC204066|SH220112.07FU;k:Fungi,p:Ascomycota,c:Dothideomycetes,o:Pleosporales,f:Sporormiaceae,g:Sporormiella",Probable,Saprotroph,Undefined Saprotroph,NULL
+3,"GS|100.0|UDB028036|SH190236.07FU;k:Fungi,p:Ascomycota,c:Eurotiomycetes,o:Eurotiales,f:Elaphomycetaceae,g:Elaphomyces,s:Elaphomyces muricatus",Highly Probable,Symbiotroph,Ectomycorrhizal,Gasteroid
+3,"GS|100.0|KX611037|SH184176.07FU;k:Fungi,p:Ascomycota,c:Dothideomycetes,o:Pleosporales,f:Sporormiaceae,g:Preussia,s:Preussia africana",Probable,Saprotroph,Dung Saprotroph-Plant Saprotroph,Microfungus
+4,"GSL|100.0|KY887800|SH180468.07FU;k:Fungi,p:Ascomycota,c:Eurotiomycetes,o:Chaetothyriales,f:Trichomeriaceae,g:Knufia,s:Knufia marmoricola",Possible,Pathotroph-Saprotroph,Animal Pathogen-Plant Pathogen-Soil Saprotroph-Undefined Saprotroph,Microfungus
+4,"GSL|100.0|HE672155|SH181823.07FU;k:Fungi,p:Ascomycota,c:Saccharomycetes,o:Saccharomycetales,f:Dipodascaceae,g:Geotrichum,s:Geotrichum europaeum",Possible,Saprotroph,Undefined Saprotroph,Yeast
+4,"US|0.0286|None;k:Fungi,p:Ascomycota,c:Saccharomycetes,o:Saccharomycetales",Possible,Saprotroph,Undefined Saprotroph,Yeast
+4,"GSL|100.0|FJ545383|SH205225.07FU;k:Fungi,p:Ascomycota,c:Sordariomycetes,o:Hypocreales,f:Nectriaceae,g:Fusarium,s:Fusarium solani",Possible,Pathotroph-Saprotroph,Plant Pathogen-Soil Saprotroph-Wood Saprotroph,NULL
+4,"US|0.0000|KF823589|SH198314.07FU;k:Fungi,p:Basidiomycota,c:Tremellomycetes,o:Tremellales",Possible,Pathotroph-Saprotroph-Symbiotroph,Fungal Parasite-Undefined Saprotroph,Tremelloid-Yeast
+4,"US|0.0000|KU000541|SH030872.07FU;k:Fungi,p:Mucoromycota,c:Mucoromycetes,o:Mucorales",Possible,Saprotroph,Undefined Saprotroph,Microfungus
+4,"GSL|100.0|KP131634|SH203414.07FU;k:Fungi,p:Ascomycota,c:Eurotiomycetes,o:Eurotiales,f:Aspergillaceae,g:Aspergillus",Possible,Saprotroph,Undefined Saprotroph,Microfungus
+4,"GS|100.0|AM176681|SH210202.07FU;k:Fungi,p:Ascomycota,c:Sordariomycetes,o:Hypocreales,f:Nectriaceae,g:Corallomycetella,s:Corallomycetella repens",Possible,Saprotroph,Undefined Saprotroph,Microfungus
+4,"GSL|100.0|EF669936|SH221298.07FU;k:Fungi,p:Ascomycota,c:Eurotiomycetes,o:Eurotiales,f:Aspergillaceae,g:Aspergillus",Possible,Saprotroph,Undefined Saprotroph,Microfungus
+4,"GS|97.3|EU259902|SH024664.07FU;k:Fungi,p:Ascomycota,c:Lecanoromycetes,o:Lecideales,f:Lecideaceae,g:Lecidea,s:Lecidea laboriosa",Highly Probable,Symbiotroph,Lichenized,Thallus
+4,"SS|0.7300|DQ374127|SH191927.07FU;k:Fungi,p:Ascomycota,c:Lecanoromycetes,o:Acarosporales,f:Acarosporaceae",Highly Probable,Symbiotroph,Lichenized,Thallus
+4,"GS|100.0|KF309957|SH214155.07FU;k:Fungi,p:Ascomycota,c:Dothideomycetes,o:Capnodiales,f:Teratosphaeriaceae,g:Elasticomyces,s:Elasticomyces elasticus",Probable,Pathotroph-Saprotroph,Animal Pathogen-Plant Pathogen-Undefined Saprotroph,NULL
+4,"US|0.0343|None;k:Fungi,p:Ascomycota,c:Saccharomycetes,o:Saccharomycetales",Possible,Saprotroph,Undefined Saprotroph,Yeast
+4,"GS|100.0|GU074436|SH210507.07FU;k:Fungi,p:Ascomycota,c:Lecanoromycetes,o:Lecideales,f:Lecideaceae,g:Lecidea,s:Lecidea cancriformis",Highly Probable,Symbiotroph,Lichenized,Thallus
+4,"US|0.8259|JX042769|SH188026.07FU;k:Fungi,p:Basidiomycota,c:Agaricomycetes,o:Trechisporales,f:Hydnodontaceae,g:Trechispora",Highly Probable,Saprotroph,Wood Saprotroph,Corticioid

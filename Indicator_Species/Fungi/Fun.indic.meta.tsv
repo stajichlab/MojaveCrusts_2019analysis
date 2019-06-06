@@ -1,0 +1,7 @@
+SampleID	Site	Crust_type	Crust_type_Site	Description
+#q2:types	categorical	categorical	categorical	categorical
+CLC	Mojave	CLC	CLC	NP
+GLC	Mojave	GLC	GLC	NP
+LAC	Mojave	LAC	LAC	NP
+RMC	Mojave	RMC	RMC	NP
+SMC	Mojave	SMC	SMC	NP

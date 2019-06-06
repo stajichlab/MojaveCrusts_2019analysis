@@ -350,12 +350,30 @@ This plot include statistical analysis using "stat_compare_means" with "method =
 sample_data(physeq.prune.rarefy)$Crust_type = factor(sample_data(physeq.prune.rarefy)$Crust_type, levels = c("LAC","CLC", "GLC", "RMC", "SMC","LAC.Sub","CLC.Sub", "GLC.Sub", "RMC.Sub", "SMC.Sub"))
 ```
 
+
+```{r}
+head(meta)
+```
+
+
 ###ANOVA
 ```{r}
 alpha.diversity = estimate_richness(physeq.prune.rarefy, measures = c("Observed"))
 data.anova = cbind(sample_data(physeq.prune.rarefy), alpha.diversity)
 physeq.prune.rarefy.anova = aov(Observed ~ Crust_type, data.anova)
+physeq.prune.rarefy.anova.Crusttype_layer = aov(Observed ~ Layer*Crust_type_no_depth, data.anova)
 summary(physeq.prune.rarefy.anova)
+summary(physeq.prune.rarefy.anova.Crusttype_layer)
+```
+
+```{r}
+physeq.prune.rarefy.anova.Crusttype_layer = aov(Observed ~ Crust_type*Layer, data.anova)
+summary(physeq.prune.rarefy.anova.Crusttype_layer)
+```
+
+```{r}
+tukey.ps.layer = TukeyHSD(x=physeq.prune.rarefy.anova.Crusttype_layer, conf.level = 0.95)
+summary(tukey.ps.layer)
 ```
 
 ```{r}

@@ -1,0 +1,548 @@
+---
+title: "Mojave_Bac_Indic_Species"
+author: "Nat Pombubpa"
+date: "Updated on May 23, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Documentation for Qiime2 Silva extracted length classifier on Sheephole crusts samples
+This is a documentation for otu table, taxonomy table, and tree which were generated from Qiime2 using DADA2 and Silva database classifier extracted lenght (515-806). 
+
+###STEP1: Load all necessary packages for analysis
+More information about Phyloseq can be found at the following link: [Phyloseq](https://joey711.github.io/phyloseq/)
+If you get error in this step, you probably need to install any packages which causes error.
+
+```{r warning=FALSE, message=FALSE}
+library(ape)
+library(vegan)
+library(plyr)
+library(dplyr)
+library(scales)
+library(grid)
+library(reshape2)
+library(phyloseq)
+library(magrittr)
+library(ggplot2)
+library(ggpubr)
+library(data.table)
+library(tidyr)
+library(labdsv)
+```
+
+
+###STEP3: Import otu table for analysis using Phyloseq 
+
+```{r warning=FALSE}
+otus <- read.table("MojaveBacQ2FWLEsilva515806.otu_table.fix.txt",
+                   header=T,sep="\t",row.names = 1)
+otumat <- as(as.matrix(otus), "matrix")
+OTU = otu_table(otumat, taxa_are_rows = TRUE)
+```
+
+###STEP4: Import taxonomy table for analysis using Phyloseq
+This taxonomy table was created from STEP2.
+```{r warning=FALSE}
+taxmat <- read.csv("taxonomy_phyloseq_fix.csv", 
+                   sep=",",row.names=1)
+row.names(taxmat) = taxmat$OTU.ID
+taxmat <- as(as.matrix(taxmat),"matrix")
+TAX = tax_table(taxmat)
+```
+
+###STEP5: Import tree file for analysis using Phyloseq
+
+```{r warning=FALSE}
+treefile = "tree.nwk"
+tree = read.tree(treefile)
+```
+
+###STEP6: Import mapping file for analysis using Phyloseq
+
+1.Check mapping file before import to R, R will automatically change sample name that starts with number or contain “-” in sample name. If you get error in this step, you should check sample name first. 
+
+2.First column of first row should not start with #, R will not read the first row that starts with #
+
+3. You can choose which samples to include in analysis by indicating specific group in the column
+
+```{r warning=FALSE}
+meta = read.table("Mojave_mappingfile_8-Aug-2018.txt",
+                  header=TRUE,row.names=1,
+                  sep="\t",stringsAsFactors=FALSE)
+```
+
+Check if your metadata file has been import successfully and correctly, the output will show a table of your metadata file (mapping file). *If you do not have header, you might start your first row with # (remove # and reload your mapping file).
+```{r}
+tail(meta)
+```
+
+```{r}
+meta = meta[which(meta$Layer %in% c("Surface")),]
+```
+
+```{r}
+head(meta)
+```
+
+Construct sample_data-class using imported metadata
+```{r warning=FALSE}
+sampleData <- sample_data(meta)
+```
+
+###STEP7: Construct Phyloseq object
+To construct phyloseq object, otu table, taxonomy table, and sampleData are required. Phylogenetic tree can be included, but it is not necessary for constructing phyloseq object.
+Construct Phyloseq object called "Physeq"
+
+```{r warning=FALSE}
+physeq = phyloseq(OTU,TAX,sampleData,tree)
+```
+
+###STEP8: Check phyloseq object
+This should indicate that your physeq is a "phyloseq-class experiment-level object"
+
+```{r}
+physeq
+```
+
+###STEP9: Remove singletons
+Remove any OTUs that present only one time.
+
+```{r}
+physeq.prune = prune_taxa(taxa_sums(physeq) > 5, physeq)
+```
+
+###STEP10: Plot read counts to check dataset
+Check read counts: any samples that have very low reads should be removed.
+[Ref](http://evomics.org/wp-content/uploads/2016/01/phyloseq-Lab-01-Answers.html)
+
+```{r}
+readcount = data.table(as(sample_data(physeq.prune), "data.frame"),
+                 TotalReads = sample_sums(physeq.prune), 
+                 keep.rownames = TRUE)
+setnames(readcount, "rn", "SampleID")
+
+#For plotting, use command below.
+#SeqDepth = ggplot(readcount, aes(TotalReads)) + geom_histogram() + ggtitle("Sequencing Depth")
+```
+
+TotalReads of all the samples can be in this table (select only SampleID and TotalReads columns).
+In order to check samples with low number of reads, "order()" can be used to sort "TotalReads" column.
+In this dataset, N55.Rhizo has very low number of reads, so will will filter this sample out using the next minimum number of reads.
+```{r}
+readcount = readcount[order(readcount$TotalReads), c("SampleID", "TotalReads")]
+```
+
+```{r}
+head(readcount)
+```
+
+###STEP11: Rarefy OTUs to a minimum number of reads
+Rarefy OTUs (remove any samples that has very low number of reads)
+If this step work fine, you have successfully imported data to R and completely generate phyloseq object as "physeq.prune.rarefy".
+```{r warning=FALSE}
+set.seed(711)
+physeq.prune.rarefy = rarefy_even_depth(physeq.prune, sample.size = 37386, replace = FALSE, trimOTUs = TRUE)
+physeq.prune.rarefy
+```
+
+### Remove non-bacterial ASVs
+
+```{r}
+Bac.physeq.prune.rarefy = subset_taxa(physeq.prune.rarefy, Kingdom != "Rhizaria")
+Bac.physeq.prune.rarefy = subset_taxa(Bac.physeq.prune.rarefy, Kingdom != "Chromista")
+Bac.physeq.prune.rarefy = subset_taxa(Bac.physeq.prune.rarefy, Kingdom != "Unassigned")
+Bac.physeq.prune.rarefy = subset_taxa(Bac.physeq.prune.rarefy, Kingdom != "D_0__Eukaryota")
+Bac.physeq.prune.rarefy
+```
+
+###Unique/Endemic
+
+```{r}
+Bac.physeq.prune.rarefy
+```
+
+```{r}
+sample_data(Bac.physeq.prune.rarefy)
+```
+
+
+```{r}
+physeq.prune.rarefy.merge.Crust_type <- merge_samples(Bac.physeq.prune.rarefy, "Crust_type")
+sample_data(physeq.prune.rarefy.merge.Crust_type)$Crust_type <- factor(sample_names(physeq.prune.rarefy.merge.Crust_type))
+physeq.prune.rarefy.merge.Crust_type
+```
+
+```{r}
+#physeq.prune.rarefy.merge.Crust_type = subset_samples(physeq.prune.rarefy.merge.Crust_type, Crust_type_Site !="SHP.GLC")
+```
+
+```{r}
+#physeq.prune.rarefy.merge.Crust_type.binary = transform_sample_counts(physeq.prune.rarefy.merge.Crust_type, function(abund) 1*(abund>0))
+```
+
+```{r}
+#OTU_SF_merge_crust_type = otu_table(physeq.prune.rarefy.merge.Crust_type.binary)
+#OTU_SF_merge_crust_type = t(OTU_SF_merge_crust_type)
+#head(OTU_SF_merge_crust_type)
+```
+
+```{r}
+#OTU_SF_merge_crust_type_endemic = OTU_SF_merge_crust_type[rowSums(OTU_SF_merge_crust_type == 1) == 1, ]
+#head(OTU_SF_merge_crust_type_endemic)
+```
+
+```{r}
+#OTU_SF_merge_crust_type_endemic_df = data.frame(OTUendemic = row.names(OTU_SF_merge_crust_type_endemic))
+#dim(OTU_SF_merge_crust_type_endemic_df)
+```
+
+```{r warning=FALSE}
+#otu <- read.table("MojaveBacQ2FWLE.otu_table.fix.txt",header=T,sep="\t")
+#otus.filtered = otu[otu$OTU.ID %in% OTU_SF_merge_crust_type_endemic_df$OTUendemic,]
+#otus.filtered.rn = otus.filtered[,-1]
+#rownames(otus.filtered.rn) = otus.filtered[,1]
+#otumat.endemic <- as(as.matrix(otus.filtered.rn), "matrix")
+#OTU.endemic = otu_table(otumat.endemic, taxa_are_rows = TRUE)
+```
+
+```{r warning=FALSE}
+#physeq.endemic = phyloseq(OTU.endemic,TAX,sampleData,tree)
+```
+
+```{r}
+#physeq.endemic
+```
+
+```{r}
+#physeq.endemic.prune = prune_taxa(taxa_sums(physeq.endemic) > 5, physeq.endemic)
+```
+
+```{r}
+#physeq.endemic.prune
+```
+
+```{r}
+#readcount = data.table(as(sample_data(physeq.endemic.prune), "data.frame"),
+#                 TotalReads = sample_sums(physeq.endemic.prune), 
+#                 keep.rownames = TRUE)
+#setnames(readcount, "rn", "SampleID")
+#readcount = readcount[order(readcount$TotalReads), c("SampleID", "TotalReads")]
+#head(readcount)
+```
+
+```{r warning=FALSE}
+#set.seed(711)
+#physeq.endemic.prune.rarefy = rarefy_even_depth(physeq.endemic.prune, sample.size = 4164, replace = FALSE, trimOTUs = TRUE)
+#physeq.endemic.prune.rarefy
+```
+
+
+```{r}
+#physeq.endemic.prune.rarefy.merge.Crust_type <- merge_samples(physeq.endemic.prune.rarefy, "Crust_type")
+#sample_data(physeq.endemic.prune.rarefy.merge.Crust_type)$Crust_type <- factor(sample_names(physeq.endemic.prune.rarefy.merge.Crust_type))
+#physeq.endemic.prune.rarefy.merge.Crust_type
+```
+
+```{r}
+#physeq.endemic.prune.rarefy = subset_samples(physeq.endemic.prune.rarefy, Crust_type !="GLC")
+```
+
+```{r}
+#physeq.endemic.prune.rarefy
+```
+
+```{r}
+#Heatmap.crusttype.endemic = prune_taxa(names(sort(taxa_sums(physeq.endemic.prune.rarefy),TRUE)[1:50]), physeq.endemic.prune.rarefy)
+```
+
+
+```{r}
+#badTaxa = c("8a30168b28e042a16f4d6f53b343832b")
+#goodTaxa <- setdiff(taxa_names(Heatmap.crusttype.endemic), badTaxa)
+#Heatmap.crusttype.endemic2 <- prune_taxa(goodTaxa, Heatmap.crusttype.endemic)
+#Heatmap.crusttype.endemic2
+```
+
+```{r}
+#Heatmap.crusttype.endemic.plot = plot_heatmap(Heatmap.crusttype.endemic2, "PCoA", "unifrac", "Crust_type", "Family", sample.order = "Crust_type")+ ggtitle("Bacterial endemic species heatmap (top 50 ASVs)") + theme(plot.title = element_text(hjust = 0.5))
+#print(Heatmap.crusttype.endemic.plot)
+
+#ggsave("./Figures/Bacterial_endemic_species_heatmap_top50_class.png", plot = Heatmap.crusttype.endemic.plot, width = 12, height = 8)
+```
+
+### Indicator Species (Andrew)
+
+Convert phyloseq OTU table to reflect species
+
+```{r}
+Bac.physeq.prune.rarefy
+```
+
+Glomerate at Species level (However, not all of species will be unique)
+See for ref: https://github.com/joey711/phyloseq/issues/927
+
+```{r}
+phyloGlom = tax_glom(Bac.physeq.prune.rarefy,taxrank = "Species")
+```
+
+```{r}
+phyloGlom
+```
+
+Subset samples for specific phyla
+```{r}
+#phyloGlom = subset_taxa(phyloGlom, Phylum == "D_1__Cyanobacteria")
+```
+
+
+Instead of using unique Species name, OTU.ID will be used instead becasue they are unique
+```{r}
+glomTax = tax_table(phyloGlom)[,"OTU.ID"]
+```
+
+Combine OTU table and Tax table
+```{r}
+glomOTU = otu_table(phyloGlom)
+glomTable = merge(glomOTU,glomTax,by=0,all=TRUE)
+head(glomTable)
+```
+
+Use OTU.ID as rowname and remove prior rowname and OTU.ID
+```{r}
+rownames(glomTable) = glomTable[,"OTU.ID"]
+glomTable$Row.names = NULL
+glomTable$OTU.ID = NULL
+```
+
+```{r}
+head(glomTable)
+```
+
+
+Transpose Rows and columns for desired labdsv format
+```{r}
+ASV = t(glomTable)
+```
+
+Remove columns with 0 species counts
+
+```{r}
+ASV.no0 = ASV[, colSums(ASV != 0) > 0]
+```
+
+Subset sampleData phyloseq object for the desired variable (e.g. treatment, depth, crust type, etc.)
+
+```{r}
+Crust_type.Mojave = subset(sampleData,select = "Site")
+```
+
+```{r}
+class(sampleData$Site)
+```
+
+
+Make the varible numeric
+
+```{r}
+sampleData$Site
+```
+
+```{r}
+Crust_type.Mojave$Site = as.numeric(as.factor(Crust_type.Mojave$Site))
+Crust_type.Mojave$Site
+```
+
+
+Run indval code from lab.dsv 
+
+```{r}
+Crust_type.Mojave.indic = indval(ASV.no0,Crust_type.Mojave$Site)
+```
+
+```{r}
+summary(Crust_type.Mojave.indic, p = 0.05, type = "short")
+```
+
+```{r}
+summary(Crust_type.Mojave.indic, p = 0.05, type = "long")
+```
+
+Get indval value
+```{r}
+Crust_type.Mojave.indic$indval
+```
+
+```{r}
+Crust_type.Mojave.indic$indcls
+```
+
+###Get Significant Indicators (203 ASVs)
+
+```{r}
+gr <- Crust_type.Mojave.indic$maxcls[Crust_type.Mojave.indic$pval<=0.05]
+iv <- Crust_type.Mojave.indic$indcls[Crust_type.Mojave.indic$pval<=0.05]
+pv <- Crust_type.Mojave.indic$pval[Crust_type.Mojave.indic$pval<=0.05]
+fr <- apply(ASV.no0[,-1]>0, 2, sum)[Crust_type.Mojave.indic$pval<=0.05]
+indvalsummary <- data.frame(group=gr, indval=iv, pvalue=pv, freq=fr)
+indvalsummary <- indvalsummary[order(indvalsummary$group, -indvalsummary$indval),]
+```
+
+```{r}
+indvalsummary
+```
+
+remove prepend X from rownames function
+
+```{r}
+rowClean <- function(x){ rownames(x) <- gsub("X", "", rownames(x)); x }
+```
+
+
+```{r}
+indvalsummary = rowClean(indvalsummary)
+indvalsummary
+```
+
+
+```{r}
+Crust_type.Mojave.indic.indval = as.data.frame(Crust_type.Mojave.indic$indval)
+Crust_type.Mojave.indic.indval = rowClean(Crust_type.Mojave.indic.indval)
+Crust_type.Mojave.indic.indval
+```
+
+Match rowname of indval table to summary table and take only 203 matches indicator species
+
+```{r}
+Crust_type.Mojave.indic.indval_filtered = Crust_type.Mojave.indic.indval[row.names(Crust_type.Mojave.indic.indval) %in% row.names(indvalsummary),]
+Crust_type.Mojave.indic.indval_filtered
+```
+
+Rename columns ###Stop here May 23, 10:45
+```{r}
+names(Crust_type.Mojave.indic.indval_filtered)[names(Crust_type.Mojave.indic.indval_filtered) == "1"] <- "CIMA"
+names(Crust_type.Mojave.indic.indval_filtered)[names(Crust_type.Mojave.indic.indval_filtered) == "2"] <- "GMT"
+names(Crust_type.Mojave.indic.indval_filtered)[names(Crust_type.Mojave.indic.indval_filtered) == "3"] <- "JTNP"
+names(Crust_type.Mojave.indic.indval_filtered)[names(Crust_type.Mojave.indic.indval_filtered) == "4"] <- "KELSO"
+
+head(Crust_type.Mojave.indic.indval_filtered)
+```
+
+Add otu table from filtered indval table
+```{r}
+indic.otumat <- as(as.matrix(Crust_type.Mojave.indic.indval_filtered), "matrix")
+indic.OTU = otu_table(indic.otumat, taxa_are_rows = TRUE)
+```
+
+```{r}
+head(indic.OTU)
+```
+
+add metadata table
+```{r warning=FALSE}
+indic.meta = read.table("Bac.indic.meta.site.tsv",
+                  header=TRUE,row.names=1,
+                  sep="\t",stringsAsFactors=FALSE)
+```
+
+```{r}
+indic.meta
+```
+
+
+```{r warning=FALSE}
+indic.sampleData <- sample_data(indic.meta)
+```
+
+```{r warning=FALSE}
+indic.physeq = phyloseq(indic.OTU,TAX,indic.sampleData)
+```
+
+```{r}
+indic.physeq
+```
+
+
+
+```{r}
+#Heatmap.indic.physeq = prune_taxa(names(sort(taxa_sums(indic.physeq),TRUE)[1:203]),indic.physeq)
+```
+
+```{r}
+sample_data(indic.physeq)$Crust_type = factor(sample_data(indic.physeq)$Crust_type, levels = c("LAC", "CLC", "GLC", "RMC", "SMC"))
+```
+
+```{r}
+indic.physeq.TAX = tax_table(indic.physeq)
+indic.physeq.OTU.Tax.tab = merge(indvalsummary,indic.physeq.TAX,by=0,all=TRUE)
+indic.physeq.OTU.Tax.tab
+```
+
+```{r}
+write.csv(indic.physeq.OTU.Tax.tab, file="Bac.indvalsummary.site.Mojave.csv")
+```
+
+```{r}
+Heatmap.indic.physeq = prune_taxa(names(sort(taxa_sums(indic.physeq),TRUE)[1:65]),indic.physeq)
+```
+
+```{r}
+Heatmap.indic.physeq.plot = plot_heatmap(Heatmap.indic.physeq, "PCoA", "bray", sample.label = NULL ,"Genus", sample.order = c("LAC", "CLC", "GLC", "RMC", "SMC"))+ ggtitle("Bacterial indicator species heatmap (P < 0.05)") + theme(plot.title = element_text(hjust = 0.5))
+print(Heatmap.indic.physeq.plot)
+```
+
+```{r}
+ggsave("./Figures/Heatmap_indicator_species_Genuslevel_0.01P.png", plot = Heatmap.indic.physeq.plot, width = 12, height = 8)
+```
+
+
+
+###Checking indicator species using abundance table
+
+```{r}
+indic.TAX = tax_table(indic.physeq)
+```
+
+```{r warning=FALSE}
+otu <- read.table("MojaveBacQ2FWLE.otu_table.fix.txt",header=T,sep="\t")
+otus.filtered = otu[otu$OTU.ID %in% OTU_SF_merge_crust_type_endemic_df$OTUendemic,]
+indic.otus.filtered = otus.filtered[otus.filtered$OTU.ID %in% row.names(indvalsummary),]
+indic.otus.filtered.rn = indic.otus.filtered[,-1]
+rownames(indic.otus.filtered.rn) = indic.otus.filtered[,1]
+indic.otumat.endemic <- as(as.matrix(indic.otus.filtered.rn), "matrix")
+indic.OTU.endemic = otu_table(indic.otumat.endemic, taxa_are_rows = TRUE)
+```
+
+```{r warning=FALSE}
+abundance.indic.physeq = phyloseq(indic.OTU.endemic,indic.TAX,sampleData)
+```
+
+```{r}
+abundance.indic.physeq
+```
+
+```{r}
+abundance.indic.physeq.noGLC = subset_samples(abundance.indic.physeq, Crust_type !="GLC")
+```
+
+```{r}
+Heatmap.abundance.indic.physeq.noGLC.plot = plot_heatmap(abundance.indic.physeq.noGLC, "NMDS", "bray", "Crust_type", "Genus", sample.order = "Crust_type")+ ggtitle("Bacterial endemic indicator spcecies abundance") + theme(plot.title = element_text(hjust = 0.5))
+print(Heatmap.abundance.indic.physeq.noGLC.plot)
+
+ggsave("./Figures/Bacterial_endemic_indicator_species_heatmap_Genus_May14.png", plot = Heatmap.abundance.indic.physeq.noGLC.plot, width = 12, height = 8)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+

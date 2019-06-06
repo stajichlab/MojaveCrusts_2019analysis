@@ -1,0 +1,6 @@
+SampleID	Site	Crust_type	Crust_type_Site	Description
+#q2:types	categorical	categorical	categorical	categorical
+CIMA	CIMA	CIMA	CIMA	NP
+GMT	GMT	GMT	GMT	NP
+JTNP	JTNP	JTNP	JTNP	NP
+KELSO	KELSO	KELSO	KELSO	NP
