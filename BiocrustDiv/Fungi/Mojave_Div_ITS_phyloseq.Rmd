@@ -1,7 +1,7 @@
 ---
 title: "Mojave_Div_ITS_phyloseq"
 author: "Nat Pombubpa"
-date: "Updated on April 29, 2019"
+date: "Updated on July 29, 2019"
 output: html_document
 ---
 
@@ -380,6 +380,8 @@ alpha.diversity = estimate_richness(physeq.prune.rarefy, measures = c("Observed"
 data.anova = cbind(sample_data(physeq.prune.rarefy), alpha.diversity)
 physeq.prune.rarefy.anova = aov(Observed ~ Site_layer, data.anova)
 summary(physeq.prune.rarefy.anova)
+physeq.prune.rarefy.anova.Site.Layer = aov(Observed ~ Site*Layer, data.anova)
+summary(physeq.prune.rarefy.anova.Site.Layer)
 ```
 
 ```{r}
@@ -417,8 +419,13 @@ ylabel <- data.frame("ylabel" = c(245,280,235,345,215,295,210,320))
 LABELS$ylabel<-ylabel$ylabel
 ```
 
+```{r}
+LABELS
+```
+
+
 ```{r warning=FALSE}
-physeq.prune.rarefy.ps.plot.richness.site.layer = plot_richness(physeq.prune.rarefy, x="Site_layer", color=("Site_layer"), measures=c("Observed")) + geom_boxplot() + ggtitle("Mojave Biocrust Fungal Alpha Diversity by Site and Layer") + stat_compare_means(method = "anova", label.y = 350) + theme(plot.title = element_text(hjust = 0.5)) + geom_text(data=LABELS, aes(x=LABELS$Site, y = LABELS$ylabel, label = LABELS$Letters))
+physeq.prune.rarefy.ps.plot.richness.site.layer = plot_richness(physeq.prune.rarefy, x="Site_layer", color=("Site_layer"), measures=c("Observed")) + geom_boxplot() + ggtitle("Mojave Biocrust Fungal Alpha Diversity by Site and Layer") + stat_compare_means(method = "anova", label.y = 350) + theme(plot.title = element_text(hjust = 0.5)) + geom_text(data=LABELS, aes(x=LABELS$Site, y = LABELS$ylabel, label = LABELS$Letters)) + theme_bw()
 
 physeq.prune.rarefy.ps.plot.richness.site.layer
 ```
@@ -464,6 +471,8 @@ alpha.diversity = estimate_richness(physeq.prune.rarefy, measures = c("Observed"
 data.anova = cbind(sample_data(physeq.prune.rarefy), alpha.diversity)
 physeq.prune.rarefy.anova = aov(Observed ~ Crust_type, data.anova)
 summary(physeq.prune.rarefy.anova)
+physeq.prune.rarefy.anova.Crusttype_layer = aov(Observed ~ Crust_type*Layer, data.anova)
+summary(physeq.prune.rarefy.anova.Crusttype_layer)
 ```
 
 ```{r}
@@ -508,7 +517,7 @@ LABELS$ylabel<-ylabel$ylabel
 ```
 
 ```{r}
-physeq.prune.rarefy.plot.richness.Crust_type = plot_richness(physeq.prune.rarefy, x="Crust_type", color=("Crust_type"), measures=c("Observed")) + geom_boxplot() + ggtitle("Mojave Biocrust Fungall Alpha Diversity by Crust type and Layer") + stat_compare_means(method = "anova", label.y = 380) + theme(plot.title = element_text(hjust = 0.5)) + geom_text(data=LABELS, aes(x=LABELS$Crust_type, y = LABELS$ylabel , label = LABELS$Letters))
+physeq.prune.rarefy.plot.richness.Crust_type = plot_richness(physeq.prune.rarefy, x="Crust_type", color=("Crust_type"), measures=c("Observed")) + geom_boxplot() + ggtitle("Mojave Biocrust Fungall Alpha Diversity by Crust type and Layer") + stat_compare_means(method = "anova", label.y = 380) + theme(plot.title = element_text(hjust = 0.5)) + geom_text(data=LABELS, aes(x=LABELS$Crust_type, y = LABELS$ylabel , label = LABELS$Letters)) + theme_bw()
 
 physeq.prune.rarefy.plot.richness.Crust_type
 ```

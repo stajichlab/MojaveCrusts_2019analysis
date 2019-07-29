@@ -1,7 +1,7 @@
 ---
 title: "Mojave_Div_16S_Qiime2"
 author: "Nat Pombubpa"
-date: "Updated on April 29, 2019"
+date: "Updated on July 29, 2019"
 output: html_document
 ---
 
@@ -427,7 +427,7 @@ LABELS$ylabel<-ylabel$ylabel
 ```
 
 ```{r}
-physeq.prune.rarefy.plot.richness.Crust_type = plot_richness(physeq.prune.rarefy, x="Crust_type", color=("Crust_type"), measures=c("Observed")) + geom_boxplot() + ggtitle("Mojave Biocrust Bacterial Alpha Diversity by Crust type and Layer") + stat_compare_means(method = "anova", label.y = 2800) + theme(plot.title = element_text(hjust = 0.5)) + geom_text(data=LABELS, aes(x=LABELS$Crust_type, y = LABELS$ylabel , label = LABELS$Letters))
+physeq.prune.rarefy.plot.richness.Crust_type = plot_richness(physeq.prune.rarefy, x="Crust_type", color=("Crust_type"), measures=c("Observed")) + geom_boxplot() + ggtitle("Mojave Biocrust Bacterial Alpha Diversity by Crust type and Layer") + stat_compare_means(method = "anova", label.y = 2800) + theme(plot.title = element_text(hjust = 0.5)) + geom_text(data=LABELS, aes(x=LABELS$Crust_type, y = LABELS$ylabel , label = LABELS$Letters)) + theme_bw()
 
 physeq.prune.rarefy.plot.richness.Crust_type
 ```
@@ -471,6 +471,8 @@ alpha.diversity = estimate_richness(physeq.prune.rarefy, measures = c("Observed"
 data.anova = cbind(sample_data(physeq.prune.rarefy), alpha.diversity)
 physeq.prune.rarefy.anova = aov(Observed ~ Site_layer, data.anova)
 summary(physeq.prune.rarefy.anova)
+physeq.prune.rarefy.anova.Site.Layer = aov(Observed ~ Site*Layer, data.anova)
+summary(physeq.prune.rarefy.anova.Site.Layer)
 ```
 
 ```{r}
@@ -524,7 +526,7 @@ LABELS
 ```
 
 ```{r}
-physeq.prune.rarefy.plot.richness.Site_layer = plot_richness(physeq.prune.rarefy, x="Site_layer", color=("Site_layer"), measures=c("Observed")) + geom_boxplot() + ggtitle("Mojave Biocrust Bacterial Alpha Diversity by Site and Layer") + stat_compare_means(method = "anova", label.y = 2800) + theme(plot.title = element_text(hjust = 0.5)) + geom_text(data=LABELS, aes(x=LABELS$Site, y = LABELS$ylabel , label = LABELS$Letters))
+physeq.prune.rarefy.plot.richness.Site_layer = plot_richness(physeq.prune.rarefy, x="Site_layer", color=("Site_layer"), measures=c("Observed")) + geom_boxplot() + ggtitle("Mojave Biocrust Bacterial Alpha Diversity by Site and Layer") + stat_compare_means(method = "anova", label.y = 2800) + theme(plot.title = element_text(hjust = 0.5)) + geom_text(data=LABELS, aes(x=LABELS$Site, y = LABELS$ylabel , label = LABELS$Letters)) + theme_bw()
 
 physeq.prune.rarefy.plot.richness.Site_layer
 ```
