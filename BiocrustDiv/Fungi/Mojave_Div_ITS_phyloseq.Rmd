@@ -1,7 +1,7 @@
 ---
 title: "Mojave_Div_ITS_phyloseq"
 author: "Nat Pombubpa"
-date: "Updated on July 30, 2019"
+date: "Updated on August 2, 2019"
 output: html_document
 ---
 
@@ -715,6 +715,80 @@ for (i in FungiClass) {
 dev.off()
 ```
 
+
+MS: Figure S1A comparing taxonmic differences by Site
+
+```{r}
+physeq.prune.rarefy.SF = subset_samples(physeq.prune.rarefy, Layer=="Surface")
+```
+
+```{r}
+FungiClass = as.character(get_taxa_unique(physeq.prune.rarefy.SF, "Class"))
+FungiClass = FungiClass[complete.cases(FungiClass)]
+```
+
+```{r}
+pdf("./Figures/Fungal_Class_Alpha_(Observed)_Diversity_by_Site_surface_only.pdf", width = 6, height = 3.8)
+for (i in FungiClass) {
+  APS = subset_taxa(physeq.prune.rarefy.SF, Class == i)
+  APS.plot = plot_richness(APS, x="Site", color =("Site"), measures=c("Observed")) + geom_boxplot(lwd=0.5) + ggtitle(i) + stat_compare_means(method = "anova") + theme(plot.title = element_text(hjust = 0.5)) + theme_bw() + scale_colour_brewer(palette="Set1") + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+  print(APS.plot)
+}
+dev.off()
+```
+
+MS: Figure S1B comparing taxonmic differences by Layer
+
+```{r}
+FungiClass.all = as.character(get_taxa_unique(physeq.prune.rarefy, "Class"))
+FungiClass.all = FungiClass.all[complete.cases(FungiClass.all)]
+FungiClass.all
+```
+
+```{r}
+pdf("./Figures/Bacterial_Phylum_Alpha_(Observed)_Diversity_by_Layer.pdf", width = 6, height = 3.8)
+for (i in FungiClass.all) {
+  APS = subset_taxa(physeq.prune.rarefy, Class == i)
+  APS.plot = plot_richness(APS, x="Layer", color =("Layer"), measures=c("Observed")) + geom_boxplot(lwd=0.5) + ggtitle(i) + stat_compare_means(method = "t.test", label.x.npc = c("right")) + theme(plot.title = element_text(hjust = 0.5)) + theme_bw() + scale_colour_brewer(palette="Set1") + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+  print(APS.plot)
+}
+dev.off()
+```
+
+```{r}
+APS = subset_taxa(physeq.prune.rarefy, Class == "Sordariomycetes")
+APS.plot = plot_richness(APS, x="Layer", color =("Layer"), measures=c("Observed")) + geom_boxplot(lwd=0.5) + ggtitle("Sordariomycetes") + stat_compare_means(method = "t.test", label.x.npc = c("right")) + theme(plot.title = element_text(hjust = 0.5)) + theme_bw() + scale_colour_brewer(palette="Set1") + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+print(APS.plot)
+```
+
+```{r}
+APS = subset_taxa(physeq.prune.rarefy, Class == "Sordariomycetes")
+alpha.diversity.Sordariomycetes = estimate_richness(APS, measures = c("Observed"))
+data.anova.Sordariomycetes = cbind(sample_data(APS), alpha.diversity.Sordariomycetes)
+t.test(Observed ~ Layer, data.anova.Sordariomycetes)
+```
+
+```{r}
+APS = subset_taxa(physeq.prune.rarefy, Class == "Schizosaccharomycetes")
+alpha.diversity.Sordariomycetes = estimate_richness(APS, measures = c("Observed"))
+data.anova.Sordariomycetes = cbind(sample_data(APS), alpha.diversity.Sordariomycetes)
+t.test(Observed ~ Layer, data.anova.Sordariomycetes)
+```
+
+
+MS: Figure S1C comparing taxonmic differences by Crust types
+
+```{r}
+pdf("./Figures/Bacterial_Phylum_Alpha_(Observed)_Diversity_by_Crust_type_surface_only.pdf", width = 6, height = 3.8 )
+for (i in FungiClass) {
+  APS = subset_taxa(physeq.prune.rarefy.SF, Class == i)
+  APS.plot = plot_richness(APS, x="Crust_type", color =("Crust_type"), measures=c("Observed")) + geom_boxplot(lwd=0.5) + ggtitle(i) + stat_compare_means(method = "anova") + theme(plot.title = element_text(hjust = 0.5)) + theme_bw() + scale_colour_brewer(palette="Set1") + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+  print(APS.plot)
+}
+dev.off()
+```
+
+
 ###STEP11.4 Summarize taxa composition
 
 ```{r}
@@ -729,6 +803,89 @@ write.table(taxa.summary.by.phylum, file = "taxa.summary.by.phylum.txt", sep ="\
 
 
 ###STEP12.1 Taxonomic composition
+
+MS: Figure 3A
+
+
+```{r}
+physeq.prune.rarefy
+```
+
+
+```{r}
+physeq.prune.rarefy = subset_taxa(physeq.prune.rarefy, Kingdom == "Fungi")
+physeq.prune.rarefy
+```
+
+
+```{r fig.height=5, fig.width=8, fig.align="center"}
+tax_layer = plot_bar(ps.glom.class, x="Layer", fill = "Class") + 
+  geom_bar(aes(color=Class, fill=Class), stat="identity", position="stack") +
+  theme_bw() 
+```
+
+```{r fig.height=5, fig.width=8, fig.align="center"}
+tax_layer
+```
+
+```{r}
+ps.glom.class = tax_glom(physeq.prune.rarefy, taxrank = "Class")
+```
+
+```{r fig.height=5, fig.width=8, fig.align="center"}
+taxcom_layer = ggplot(data = psmelt(physeq.prune.rarefy), mapping = aes_string(x = "Layer" ,y = "Abundance", fill = "Class" )) + 
+  geom_bar(stat="identity", position="fill") + 
+  ggtitle("Fungal Taxonomic Composition (Class level) by Layer")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+print(taxcom_layer)
+```
+
+```{r fig.height=5, fig.width=8, fig.align="center"}
+pdf("./Figures/Fig3A_Fungal_Taxonomic_Composition_(Class_level)_by_Layer.pdf", width = 8, height = 5.8 )
+taxcom_layer
+dev.off()
+```
+
+MS: Figure S1A
+
+```{r fig.height=5, fig.width=8, fig.align="center"}
+taxcom_site = ggplot(data = psmelt(physeq.prune.rarefy.SF), mapping = aes_string(x = "Site" ,y = "Abundance", fill = "Class" )) + 
+  geom_bar(stat="identity", position="fill") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  theme_bw()
+print(taxcom_site)
+```
+
+```{r fig.height=5, fig.width=8, fig.align="center"}
+pdf("./Figures/FigS1A_Fungal_Taxonomic_Composition_(Class_level)_by_Site.pdf", width = 8, height = 5.8 )
+taxcom_site
+dev.off()
+```
+
+
+
+MS: Figure S1B
+
+```{r fig.height=5, fig.width=8, fig.align="center"}
+taxcom_crust_type = ggplot(data = psmelt(physeq.prune.rarefy.SF), mapping = aes_string(x = "Crust_type" ,y = "Abundance", fill = "Class" )) + 
+  geom_bar(stat="identity", position="fill") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  theme_bw()
+print(taxcom_crust_type)
+```
+
+```{r fig.height=5, fig.width=8, fig.align="center"}
+pdf("./Figures/FigS1B_Fungal_Taxonomic_Composition_(Class_level)_by_Crust_type.pdf", width = 8, height = 5.8 )
+taxcom_crust_type
+dev.off()
+```
+
+
+
+
+
+
 ```{r fig.height=5, fig.width=8, fig.align="center"}
 taxcom_sitelayer = ggplot(data = psmelt(physeq.prune.rarefy), mapping = aes_string(x = "Site_layer" ,y = "Abundance", fill = "Class" )) + 
   geom_bar(stat="identity", position="fill") + 
