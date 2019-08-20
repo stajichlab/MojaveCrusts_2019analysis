@@ -1,7 +1,7 @@
 ---
 title: "Mojave_Str_16S_Qiime2"
 author: "Nat Pombubpa"
-date: "Updated on May 23, 2019"
+date: "Updated on August 8, 2019"
 output: html_document
 ---
 
@@ -260,7 +260,7 @@ ps.dist = phyloseq::distance(physeq.prune.x, "unifrac")
 ```
 
 ```{r}
-adonis(ps.dist ~ Site, as(sample_data(physeq.prune.x),"data.frame"))
+adonis(ps.dist ~ Site*Layer*Crust_type, as(sample_data(physeq.prune.x),"data.frame"))
 ```
 
 

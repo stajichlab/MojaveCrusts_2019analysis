@@ -1,7 +1,7 @@
 ---
 title: "Mojave_Div_ITS_phyloseq"
 author: "Nat Pombubpa"
-date: "Updated on August 2, 2019"
+date: "Updated on August 5, 2019"
 output: html_document
 ---
 
@@ -839,6 +839,12 @@ taxcom_layer = ggplot(data = psmelt(physeq.prune.rarefy), mapping = aes_string(x
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 print(taxcom_layer)
+```
+
+```{r}
+png("./Figures/Fig3A_Fungal_Taxonomic_Composition_(Class_level)_by_Layer.png", units="in", width = 8, height = 5.8, res = 300 )
+taxcom_layer
+dev.off()
 ```
 
 ```{r fig.height=5, fig.width=8, fig.align="center"}

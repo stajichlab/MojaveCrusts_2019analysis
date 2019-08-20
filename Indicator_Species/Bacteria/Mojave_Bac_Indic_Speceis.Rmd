@@ -148,6 +148,18 @@ physeq.prune.rarefy = rarefy_even_depth(physeq.prune, sample.size = 37386, repla
 physeq.prune.rarefy
 ```
 
+###TEST HEATMAP
+```{r}
+Heatmap.physeq.prune.rarefy = prune_taxa(names(sort(taxa_sums(physeq.prune.rarefy),TRUE)[1:28]),physeq.prune.rarefy)
+```
+
+```{r}
+Heatmap.physeq.prune.rarefy.plot = plot_heatmap(Heatmap.physeq.prune.rarefy, "PCoA", "unifrac", "Layer", "Genus", sample.order = "Layer", high="darkorange")+ ggtitle("Bacterial endemic indicator spcecies abundance") + theme(plot.title = element_text(hjust = 0.5))
+print(Heatmap.physeq.prune.rarefy.plot)
+```
+
+
+
 ### Remove non-bacterial ASVs
 
 ```{r}
@@ -336,7 +348,7 @@ ASV.no0 = ASV[, colSums(ASV != 0) > 0]
 Subset sampleData phyloseq object for the desired variable (e.g. treatment, depth, crust type, etc.)
 
 ```{r}
-Crust_type.Mojave = subset(sampleData,select = "Site")
+Crust_type.Mojave = subset(sampleData,select = "Crust_type")
 ```
 
 ```{r}
@@ -351,15 +363,15 @@ sampleData$Site
 ```
 
 ```{r}
-Crust_type.Mojave$Site = as.numeric(as.factor(Crust_type.Mojave$Site))
-Crust_type.Mojave$Site
+Crust_type.Mojave$Crust_type = as.numeric(as.factor(Crust_type.Mojave$Crust_type))
+Crust_type.Mojave$Crust_type
 ```
 
 
 Run indval code from lab.dsv 
 
 ```{r}
-Crust_type.Mojave.indic = indval(ASV.no0,Crust_type.Mojave$Site)
+Crust_type.Mojave.indic = indval(ASV.no0,Crust_type.Mojave$Crust_type)
 ```
 
 ```{r}
@@ -422,6 +434,15 @@ Crust_type.Mojave.indic.indval_filtered
 
 Rename columns ###Stop here May 23, 10:45
 ```{r}
+names(Crust_type.Mojave.indic.indval_filtered)[names(Crust_type.Mojave.indic.indval_filtered) == "1"] <- "CLC"
+names(Crust_type.Mojave.indic.indval_filtered)[names(Crust_type.Mojave.indic.indval_filtered) == "2"] <- "GLC"
+names(Crust_type.Mojave.indic.indval_filtered)[names(Crust_type.Mojave.indic.indval_filtered) == "3"] <- "LAC"
+names(Crust_type.Mojave.indic.indval_filtered)[names(Crust_type.Mojave.indic.indval_filtered) == "4"] <- "RMC"
+names(Crust_type.Mojave.indic.indval_filtered)[names(Crust_type.Mojave.indic.indval_filtered) == "5"] <- "SMC"
+head(Crust_type.Mojave.indic.indval_filtered)
+```
+
+```{r}
 names(Crust_type.Mojave.indic.indval_filtered)[names(Crust_type.Mojave.indic.indval_filtered) == "1"] <- "CIMA"
 names(Crust_type.Mojave.indic.indval_filtered)[names(Crust_type.Mojave.indic.indval_filtered) == "2"] <- "GMT"
 names(Crust_type.Mojave.indic.indval_filtered)[names(Crust_type.Mojave.indic.indval_filtered) == "3"] <- "JTNP"
@@ -442,7 +463,7 @@ head(indic.OTU)
 
 add metadata table
 ```{r warning=FALSE}
-indic.meta = read.table("Bac.indic.meta.site.tsv",
+indic.meta = read.table("Bac.indic.meta.tsv",
                   header=TRUE,row.names=1,
                   sep="\t",stringsAsFactors=FALSE)
 ```
@@ -489,7 +510,7 @@ Heatmap.indic.physeq = prune_taxa(names(sort(taxa_sums(indic.physeq),TRUE)[1:65]
 ```
 
 ```{r}
-Heatmap.indic.physeq.plot = plot_heatmap(Heatmap.indic.physeq, "PCoA", "bray", sample.label = NULL ,"Genus", sample.order = c("LAC", "CLC", "GLC", "RMC", "SMC"))+ ggtitle("Bacterial indicator species heatmap (P < 0.05)") + theme(plot.title = element_text(hjust = 0.5))
+Heatmap.indic.physeq.plot = plot_heatmap(indic.physeq, "PCoA", "bray", sample.label = NULL ,"Genus", sample.order = c("LAC", "CLC", "GLC", "RMC", "SMC"))+ ggtitle("Bacterial indicator species heatmap (P < 0.05)") + theme(plot.title = element_text(hjust = 0.5))
 print(Heatmap.indic.physeq.plot)
 ```
 
@@ -506,8 +527,8 @@ indic.TAX = tax_table(indic.physeq)
 ```
 
 ```{r warning=FALSE}
-otu <- read.table("MojaveBacQ2FWLE.otu_table.fix.txt",header=T,sep="\t")
-otus.filtered = otu[otu$OTU.ID %in% OTU_SF_merge_crust_type_endemic_df$OTUendemic,]
+otu <- read.table("MojaveBacQ2FWLEsilva515806.otu_table.fix.txt",header=T,sep="\t")
+otus.filtered = otu[otu$OTU.ID %in% indic.physeq.OTU.Tax.tab$OTU.ID,]
 indic.otus.filtered = otus.filtered[otus.filtered$OTU.ID %in% row.names(indvalsummary),]
 indic.otus.filtered.rn = indic.otus.filtered[,-1]
 rownames(indic.otus.filtered.rn) = indic.otus.filtered[,1]
@@ -522,6 +543,14 @@ abundance.indic.physeq = phyloseq(indic.OTU.endemic,indic.TAX,sampleData)
 ```{r}
 abundance.indic.physeq
 ```
+
+```{r}
+Heatmap.abundance.indic.physeq.plot = plot_heatmap(abundance.indic.physeq, "NMDS", "bray", "Crust_type", "Genus", sample.order = "Crust_type", high="orangered")+ ggtitle("Bacterial endemic indicator spcecies abundance") + theme(plot.title = element_text(hjust = 0.5))
+print(Heatmap.abundance.indic.physeq.plot)
+
+#ggsave("./Figures/Bacterial_endemic_indicator_species_heatmap_Genus_May14.png", plot = Heatmap.abundance.indic.physeq.noGLC.plot, width = 12, height = 8)
+```
+
 
 ```{r}
 abundance.indic.physeq.noGLC = subset_samples(abundance.indic.physeq, Crust_type !="GLC")

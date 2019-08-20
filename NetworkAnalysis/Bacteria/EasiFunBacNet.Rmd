@@ -12,8 +12,10 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 library(phyloseq)
 library(SpiecEasi)
+library(RCy3)
 library(igraph)
 library(ggplot2)
+library(plyr)
 ```
 
 ###SpiecEasi Test
@@ -180,6 +182,11 @@ load(file = "easi.fun.bac.SF.all.e2L40.net.rda")
 
 
 ```{r}
+easi.fun.bac.SF.net
+```
+
+
+```{r}
 set.seed(12345)
 psplotnet.phylum = plot_network(easi.fun.bac.SF.net, FG.BAC.SF.merged, type='taxa', color="Phylum", label = "Genus" ,shape = "Kingdom", hjust = 0.5)
 ```
@@ -194,5 +201,26 @@ psplotnet.phylum + ggtitle("Mojave Biocrust Microbial Community Network Analysis
 pdf("Figures/DOE.label.Biocrust_Microbial_Community_Network_Analysis_Surface_top_200.phylum.pdf", width = 15, height = 10)
 psplotnet.phylum + ggtitle("Mojave Biocrust Microbial Community Network Analysis (Surface)") + theme(plot.title = element_text(hjust = 0.5))
 dev.off()
+```
+
+
+Cytoscapes
+
+```{r}
+summary(easi.fun.bac.SF.net)
+```
+
+```{r}
+easi.fun.bac.SF.net
+```
+
+```{r}
+net.df = as_long_data_frame(easi.fun.bac.SF.net)
+net.df
+```
+
+
+```{r}
+createNetworkFromIgraph(easi.fun.bac.SF.net)
 ```
 

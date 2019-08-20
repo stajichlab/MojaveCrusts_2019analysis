@@ -1,3 +1,10 @@
-Crust_Type,Phylum,Class,Order,Family,Genus,Species
-SMC,Ascomycota,Sordariomycetes,Sordariales,Chaetomiaceae,Acrophialophora,Acrophialophora levis
-RMC,Ascomycota,Dothideomycetes,Pleosporales,Sporormiaceae,Sporormia,Sporormia subticinensis
+"","Row.names","group","indval","pvalue","freq","OUT.ID","Kingdom","Phylum","Class","Order","Family","Genus","Species"
+"1","OTU183",3,0.275641025641026,0.021,4,"OTU183","Fungi","Ascomycota","Dothideomycetes","Pleosporales","Pleosporaceae","Curvularia","Curvularia inaequalis"
+"2","OTU2036",3,0.222222222222222,0.046,3,"OTU2036","Fungi","Basidiomycota","Agaricomycetes","Agaricales","Entolomataceae","Entoloma","Entoloma halophilum"
+"3","OTU301",4,0.230232558139535,0.048,4,"OTU301","Fungi","Ascomycota","Dothideomycetes","Capnodiales","Cladosporiaceae","Cladosporium","Cladosporium herbarum"
+"4","OTU315",1,0.295245641838352,0.026,8,"OTU315","Fungi","Ascomycota","Dothideomycetes","Pleosporales","Sporormiaceae","Preussia","Preussia terricola"
+"5","OTU44",3,0.308046940486169,0.014,1,"OTU44","Fungi","Ascomycota","Dothideomycetes","Pleosporales","Sporormiaceae","Preussia","Preussia africana"
+"6","OTU52",4,0.436861743912019,0.004,1,"OTU52","Fungi","Ascomycota","Dothideomycetes","Pleosporales","Pleosporaceae","Alternaria","Alternaria hungarica"
+"7","OTU798",3,0.223463687150838,0.049,22,"OTU798","Fungi","Ascomycota","Dothideomycetes","Pleosporales","Didymellaceae","Allophoma","Allophoma labilis"
+"8","OTU804",4,0.3,0.012,4,"OTU804","Fungi","Ascomycota","Sordariomycetes","Glomerellales","Glomerellaceae","Colletotrichum","Colletotrichum gloeosporioides"
+"9","OTU98",4,0.244238932686477,0.029,1,"OTU98","Fungi","Ascomycota","Dothideomycetes","Pleosporales","Pleosporaceae","Ulocladium","Ulocladium dauci"

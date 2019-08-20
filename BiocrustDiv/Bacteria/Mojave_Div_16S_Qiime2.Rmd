@@ -1,7 +1,7 @@
 ---
 title: "Mojave_Div_16S_Qiime2"
 author: "Nat Pombubpa"
-date: "Updated on July 30, 2019"
+date: "Updated on August 5, 2019"
 output: html_document
 ---
 
@@ -750,6 +750,106 @@ dev.off()
 ```
 
 ###STEP12.2 Taxonomic composition
+
+
+MS: Figure 4A
+
+```{r}
+physeq.prune.rarefy
+```
+
+```{r}
+physeq.prune.rarefy = subset_taxa(physeq.prune.rarefy, Kingdom != "Rhizaria")
+physeq.prune.rarefy = subset_taxa(physeq.prune.rarefy, Kingdom != "Chromista")
+physeq.prune.rarefy = subset_taxa(physeq.prune.rarefy, Kingdom != "D_0__Eukaryota")
+physeq.prune.rarefy
+```
+
+```{r}
+physeq.prune.rarefy = prune_taxa(taxa_sums(physeq.prune.rarefy) > 5, physeq.prune.rarefy)
+physeq.prune.rarefy
+```
+
+```{r}
+#ps.glom.Class = tax_glom(physeq.prune.rarefy, taxrank = "Genus")
+```
+
+```{r fig.height=5, fig.width=8, fig.align="center"}
+taxcom_layer = ggplot(data = psmelt(physeq.prune.rarefy), mapping = aes_string(x = "Layer" ,y = "Abundance", fill = "Phylum" )) + 
+  geom_bar(stat="identity", position="fill") + 
+  ggtitle("Bacterial Taxonomic Composition (Phylum level) by Layer")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+print(taxcom_layer)
+```
+
+
+```{r}
+png("./Figures/Fig4A_Bacterial_Taxonomic_Composition_(Phylum_level)_by_Layer.png", units="in", width = 8, height = 5.8, res = 300 )
+taxcom_layer
+dev.off()
+```
+
+
+```{r fig.height=5, fig.width=8, fig.align="center"}
+pdf("./Figures/Fig4A_Bacterial_Taxonomic_Composition_(Phylum_level)_by_Layer.pdf", width = 8, height = 5.8 )
+taxcom_layer
+dev.off()
+```
+
+
+MS: Figure S2A
+
+```{r}
+physeq.prune.rarefy.SF = subset_samples(physeq.prune.rarefy, Layer=="Surface")
+```
+
+```{r fig.height=5, fig.width=8, fig.align="center"}
+taxcom_site = ggplot(data = psmelt(physeq.prune.rarefy.SF), mapping = aes_string(x = "Site" ,y = "Abundance", fill = "Phylum" )) + 
+  geom_bar(stat="identity", position="fill") + 
+  ggtitle("Bacterial Taxonomic Composition (Phylum level) by Sites")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+print(taxcom_site)
+```
+
+```{r}
+png("./Figures/FigS2A_Bacterial_Taxonomic_Composition_(Phylum_level)_by_Site.png", units="in", width = 8, height = 5.8, res = 300 )
+taxcom_site
+dev.off()
+```
+
+```{r fig.height=5, fig.width=8, fig.align="center"}
+pdf("./Figures/FigS2A_Bacterial_Taxonomic_Composition_(Phylum_level)_by_Sites.pdf", width = 8, height = 5.8 )
+taxcom_site
+dev.off()
+```
+
+
+MS: Figure S2B
+
+```{r fig.height=5, fig.width=8, fig.align="center"}
+taxcom_crusttype = ggplot(data = psmelt(physeq.prune.rarefy.SF), mapping = aes_string(x = "Crust_type" ,y = "Abundance", fill = "Phylum" )) + 
+  geom_bar(stat="identity", position="fill") + 
+  ggtitle("Bacterial Taxonomic Composition (Phylum level) by Crust types")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+print(taxcom_crusttype)
+```
+
+```{r}
+png("./Figures/FigS2A_Bacterial_Taxonomic_Composition_(Phylum_level)_by_Crust_type.png", units="in", width = 8, height = 5.8, res = 300 )
+taxcom_crusttype #+ theme(axis.text.x = element_text(angle = 90, hjust = 1))
+dev.off()
+```
+
+```{r fig.height=5, fig.width=8, fig.align="center"}
+pdf("./Figures/FigS2B_Bacterial_Taxonomic_Composition_(Phylum_level)_by_Crust_types.pdf", width = 8, height = 5.8 )
+taxcom_site
+dev.off()
+```
+
+
 ```{r fig.height=5, fig.width=8, fig.align="center"}
 taxcom_sitelayer = ggplot(data = psmelt(physeq.prune.rarefy), mapping = aes_string(x = "Site_layer" ,y = "Abundance", fill = "Phylum" )) + 
   geom_bar(stat="identity", position="fill") + 
@@ -818,25 +918,97 @@ for (i in BacPhylum) {
 dev.off()
 ```
 
+MS: Figure S2A comparing taxonmic differences by Site
 
 ```{r}
-physeq.prune.rarefy.SF.Acido = subset_taxa(physeq.prune.rarefy.SF, Phylum == "D_1__Firmicutes")
-alpha.diversity = estimate_richness(physeq.prune.rarefy.SF.Acido, measures = c("Observed"))
-data.anova = cbind(sample_data(physeq.prune.rarefy.SF.Acido), alpha.diversity)
-physeq.prune.rarefy.SF.Acido.anova = aov(Observed ~ Site, data.anova)
-tukey.ps.SF = TukeyHSD(x=physeq.prune.rarefy.SF.Acido.anova, 'Site', conf.level = 0.95)
-LABELS=generate_label_df(tukey.ps.SF, 'Site')
-names(LABELS) = c('Letters','Site')
+physeq.prune.rarefy.SF = subset_samples(physeq.prune.rarefy, Layer=="Surface")
 ```
 
 ```{r}
-physeq.prune.rarefy.plot.richness.Site.Acido = plot_richness(physeq.prune.rarefy.SF.Acido, x="Site", color=("Site"), measures=c("Observed")) + geom_boxplot(lwd=1,fill=c("#999999", "gold2", "cadetblue3", "palegreen2")) + ggtitle("Firmicutes Alpha Diversity by Site") + stat_compare_means(method = "anova", label.y = 85) + theme(plot.title = element_text(hjust = 0.5)) + scale_colour_manual(values = c("#000000", "#E69F00", "#56B4E9", "#009E73")) + geom_text(data=LABELS, aes(x=LABELS$Site, y = 78, label = LABELS$Letters))
-
-physeq.prune.rarefy.plot.richness.Site.Acido
+BacPhylum = as.character(get_taxa_unique(physeq.prune.rarefy.SF, "Phylum"))
+BacPhylum = BacPhylum[complete.cases(BacPhylum)]
+BacPhylum
 ```
 
 ```{r}
-APS.plot = plot_richness(APS, x="Site", color =("Site"), measures=c("Observed")) + geom_boxplot() + ggtitle(i) + stat_compare_means(method = "anova") + theme(plot.title = element_text(hjust = 0.5))
+pdf("./Figures/Bacterial_Phylum_Alpha_(Observed)_Diversity_by_Site_surface_only.pdf", width = 6, height = 3.8)
+for (i in BacPhylum) {
+  APS = subset_taxa(physeq.prune.rarefy.SF, Phylum == i)
+  APS.plot = plot_richness(APS, x="Site", color =("Site"), measures=c("Observed")) + geom_boxplot(lwd=0.5) + ggtitle(i) + stat_compare_means(method = "anova") + theme(plot.title = element_text(hjust = 0.5)) + theme_bw() + scale_colour_brewer(palette="Set1") + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+  print(APS.plot)
+}
+dev.off()
+```
+
+MS: Figure 4(B,C,D) comparing taxonmic differences by Layer
+
+```{r}
+BacPhylum.all = as.character(get_taxa_unique(physeq.prune.rarefy, "Phylum"))
+BacPhylum.all = BacPhylum.all[complete.cases(BacPhylum.all)]
+BacPhylum.all
+```
+
+```{r}
+pdf("./Figures/Bacterial_Phylum_Alpha_(Observed)_Diversity_by_Layer.pdf", width = 6, height = 3.8)
+for (i in BacPhylum.all) {
+  APS = subset_taxa(physeq.prune.rarefy, Phylum == i)
+  APS.plot = plot_richness(APS, x="Layer", color =("Layer"), measures=c("Observed")) + geom_boxplot(lwd=0.5) + ggtitle(i) + stat_compare_means(method = "t.test", label.x.npc = c("right")) + theme(plot.title = element_text(hjust = 0.5)) + theme_bw() + scale_colour_brewer(palette="Set1") + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+  print(APS.plot)
+}
+dev.off()
+```
+
+```{r}
+APS = subset_taxa(physeq.prune.rarefy, Phylum == "D_1__Actinobacteria")
+alpha.diversity.actino = estimate_richness(APS, measures = c("Observed"))
+data.anova.actino = cbind(sample_data(APS), alpha.diversity.actino)
+t.test(Observed ~ Layer, data.anova.actino)
+```
+
+```{r}
+APS = subset_taxa(physeq.prune.rarefy, Phylum == "D_1__Acidobacteria")
+alpha.diversity.acido = estimate_richness(APS, measures = c("Observed"))
+data.anova.acido = cbind(sample_data(APS), alpha.diversity.acido)
+t.test(Observed ~ Layer, data.anova.acido)
+```
+
+```{r}
+APS = subset_taxa(physeq.prune.rarefy, Phylum == "D_1__Cyanobacteria")
+alpha.diversity.cyano = estimate_richness(APS, measures = c("Observed"))
+data.anova.cyano = cbind(sample_data(APS), alpha.diversity.cyano)
+t.test(Observed ~ Layer, data.anova.cyano)
+```
+
+MS: Figure S2B comparing taxonmic differences by Crust types
+
+```{r}
+pdf("./Figures/Bacterial_Phylum_Alpha_(Observed)_Diversity_by_Crust_type_surface_only.pdf", width = 6, height = 3.8 )
+for (i in BacPhylum) {
+  APS = subset_taxa(physeq.prune.rarefy.SF, Phylum == i)
+  APS.plot = plot_richness(APS, x="Crust_type", color =("Crust_type"), measures=c("Observed")) + geom_boxplot(lwd=0.5) + ggtitle(i) + stat_compare_means(method = "anova") + theme(plot.title = element_text(hjust = 0.5)) + theme_bw() + scale_colour_brewer(palette="Set1") + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+  print(APS.plot)
+}
+dev.off()
+```
+
+```{r}
+#physeq.prune.rarefy.SF.Acido = subset_taxa(physeq.prune.rarefy.SF, Phylum == "D_1__Firmicutes")
+#alpha.diversity = estimate_richness(physeq.prune.rarefy.SF.Acido, measures = c("Observed"))
+#data.anova = cbind(sample_data(physeq.prune.rarefy.SF.Acido), alpha.diversity)
+#physeq.prune.rarefy.SF.Acido.anova = aov(Observed ~ Site, data.anova)
+#tukey.ps.SF = TukeyHSD(x=physeq.prune.rarefy.SF.Acido.anova, 'Site', conf.level = 0.95)
+#LABELS=generate_label_df(tukey.ps.SF, 'Site')
+#names(LABELS) = c('Letters','Site')
+```
+
+```{r}
+#physeq.prune.rarefy.plot.richness.Site.Acido = plot_richness(physeq.prune.rarefy.SF.Acido, x="Site", color=("Site"), measures=c("Observed")) + geom_boxplot(lwd=1,fill=c("#999999", "gold2", "cadetblue3", "palegreen2")) + ggtitle("Firmicutes Alpha Diversity by Site") + stat_compare_means(method = "anova", label.y = 85) + theme(plot.title = element_text(hjust = 0.5)) + scale_colour_manual(values = c("#000000", "#E69F00", "#56B4E9", "#009E73")) + geom_text(data=LABELS, aes(x=LABELS$Site, y = 78, label = LABELS$Letters))
+
+#physeq.prune.rarefy.plot.richness.Site.Acido
+```
+
+```{r}
+#APS.plot = plot_richness(APS, x="Site", color =("Site"), measures=c("Observed")) + geom_boxplot() + ggtitle(i) + stat_compare_means(method = "anova") + theme(plot.title = element_text(hjust = 0.5))
 ```
 
 

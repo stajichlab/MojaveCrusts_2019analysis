@@ -1,7 +1,7 @@
 ---
 title: "Mojave_Div_ITS_phyloseq"
 author: "Nat Pombubpa"
-date: "Updated on March 6, 2019"
+date: "Updated on August 7, 2019"
 output: html_document
 ---
 
@@ -163,7 +163,7 @@ ps.dist = phyloseq::distance(physeq.prune, "unifrac")
 ```
 
 ```{r}
-adonis(ps.dist ~ Site_layer, as(sample_data(physeq.prune),"data.frame"))
+adonis(ps.dist ~ Site*Layer*Crust_type, as(sample_data(physeq.prune),"data.frame"))
 ```
 
 ```{r}
@@ -199,12 +199,18 @@ sample_data(physeq.prune.x)$Site = factor(sample_data(physeq.prune.x)$Site, leve
 ```
 
 ```{r}
-pssitelayer = plot_ordination(physeq.prune.x, physeq.prune.x.ord, type = "samples", color = "Site", shape = "Layer") + ggtitle("Fungal Beta Diversity (PCoA) by Site") + theme(plot.title = element_text(hjust = 0.5)) + annotate("text", x = -0.2, y = 0.32, label = "PERMANOVA, p < 0.001") + geom_point(size=5) + scale_colour_manual(values = c("#000000", "#E69F00", "#56B4E9", "#009E73", "#CC79A7")) #+ stat_ellipse(geom = "polygon", type = "t", alpha = 1/12, aes(fill = Site_layer)) 
+pssitelayer = plot_ordination(physeq.prune.x, physeq.prune.x.ord, type = "samples", color = "Site", shape = "Layer") + ggtitle("Fungal Beta Diversity (PCoA) by Site") + theme(plot.title = element_text(hjust = 0.5)) + annotate("text", x = -0.2, y = 0.32, label = "PERMANOVA, p = 0.001") + geom_point(size=5) + scale_colour_manual(values = c("#000000", "#E69F00", "#56B4E9", "#009E73", "#CC79A7")) #+ stat_ellipse(geom = "polygon", type = "t", alpha = 1/12, aes(fill = Site_layer)) 
 
 pssitelayer
 ```
+
 ```{r}
-pdf("./Figures/Fungal Beta Diversity (PCoA) by Site (w Layer) PLPA250.pdf", width = 8, height = 5)
+pdf("./Figures/Fungal Beta Diversity (PCoA) by Site (w Layer).pdf", width = 8, height = 5)
+pssitelayer
+dev.off()
+```
+```{r}
+png("./Figures/Fungal Beta Diversity (PCoA) by Site (w Layer).png", units="in", width = 8, height = 5, res = 300 )
 pssitelayer
 dev.off()
 ```
@@ -222,13 +228,19 @@ sample_data(physeq.prune.x)$Crust_type = factor(sample_data(physeq.prune.x)$Crus
 ```
 
 ```{r}
-pscrusttype = plot_ordination(physeq.prune.x, physeq.prune.x.ord, type = "samples", color = "Crust_type", shape = "Layer") + ggtitle("Fungal Beta Diversity (PCoA) by Crust_type") + theme(plot.title = element_text(hjust = 0.5)) + annotate("text", x = -0.2, y = 0.32, label = "PERMANOVA, p < 0.001") + geom_point(size=5) + scale_colour_manual(values = c("#000000", "#E69F00", "#56B4E9", "#009E73", "#CC79A7", "#000000", "#E69F00", "#56B4E9", "#009E73", "#CC79A7")) #+ stat_ellipse(geom = "polygon", type = "t", alpha = 1/12, aes(fill = Site_layer)) 
+pscrusttype = plot_ordination(physeq.prune.x, physeq.prune.x.ord, type = "samples", color = "Crust_type", shape = "Layer") + ggtitle("Fungal Beta Diversity (PCoA) by Crust_type") + theme(plot.title = element_text(hjust = 0.5)) + annotate("text", x = -0.2, y = 0.32, label = "PERMANOVA, p = 0.004") + geom_point(size=5) + scale_colour_manual(values = c("#000000", "#E69F00", "#56B4E9", "#009E73", "#CC79A7", "#000000", "#E69F00", "#56B4E9", "#009E73", "#CC79A7")) #+ stat_ellipse(geom = "polygon", type = "t", alpha = 1/12, aes(fill = Site_layer)) 
 
 pscrusttype
 ```
 
 ```{r}
-pdf("./Figures/Fungal Beta Diversity (PCoA) by Crust type PLPA250.pdf", width = 8, height = 5)
+pdf("./Figures/Fungal Beta Diversity (PCoA) by Crust type.pdf", width = 8, height = 5)
+pscrusttype
+dev.off()
+```
+
+```{r}
+png("./Figures/Fungal Beta Diversity (PCoA) by Crust type.png", units="in", width = 8, height = 5, res = 300 )
 pscrusttype
 dev.off()
 ```

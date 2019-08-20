@@ -161,7 +161,7 @@ physeq.prune.rarefy
 For endemic analysis, we would like to look for endemic species at each sites. Therefore, we will merge samples from each site together. For examples, all of samples from GMT will be merged into one group as GMT. After merging, there will be 4 groups which are GMT, KELSO, CIMA, and JTNP.
 
 ```{r}
-physeq.prune.rarefy.merge.sitelayer <- merge_samples(physeq.prune.rarefy, "Site_layer")
+physeq.prune.rarefy.merge.sitelayer <- merge_samples(physeq.prune.rarefy, "Site")
 sample_data(physeq.prune.rarefy.merge.sitelayer)$Site_layer <- factor(sample_names(physeq.prune.rarefy.merge.sitelayer))
 physeq.prune.rarefy.merge.sitelayer
 ```
@@ -264,8 +264,8 @@ physeq.endemic.prune.rarefy = subset_taxa(physeq.endemic.prune.rarefy, Kingdom !
 For endemic analysis, we would like to look for endemic species at each sites. Therefore, we will merge samples from each site together. For examples, all of samples from GMT will be merged into one group as GMT. After merging, there will be 4 groups which are GMT, KELSO, CIMA, and JTNP.
 
 ```{r}
-physeq.endemic.prune.rarefy.merge.sitelayer <- merge_samples(physeq.endemic.prune.rarefy, "Site_layer")
-sample_data(physeq.endemic.prune.rarefy.merge.sitelayer)$Site_layer <- factor(sample_names(physeq.endemic.prune.rarefy.merge.sitelayer))
+physeq.endemic.prune.rarefy.merge.sitelayer <- merge_samples(physeq.endemic.prune.rarefy, "Site")
+sample_data(physeq.endemic.prune.rarefy.merge.sitelayer)$Site <- factor(sample_names(physeq.endemic.prune.rarefy.merge.sitelayer))
 physeq.endemic.prune.rarefy.merge.sitelayer
 ```
 
@@ -286,10 +286,10 @@ Heatmap.sitelayer.endemic2
 
 Results show 2 main phylum for endemic species which include Ascomycota and Basidiomycota
 ```{r}
-Heatmap.sitelayer.endemic.plot = plot_heatmap(Heatmap.sitelayer.endemic2, "PCoA", "bray", "Site_layer", "Order")+ ggtitle("Fungal endemic species heatmap (top 50 OTUs)") + theme(plot.title = element_text(hjust = 0.5))
+Heatmap.sitelayer.endemic.plot = plot_heatmap(Heatmap.sitelayer.endemic2, "PCoA", "bray", "Site", high="orangered3")+ ggtitle("Endemic Fungal heatmap (top 50 OTUs)") + theme(plot.title = element_text(hjust = 0.5))
 print(Heatmap.sitelayer.endemic.plot)
 
-ggsave("/Volumes/GoogleDrive/My Drive/UCR2019/Mojave_project2019/MojaveCrusts_2019analysis/EndemicSpecies/Fungi/Figures/Fungal_endemic_species_heatmap_top50_Order.png", plot = Heatmap.sitelayer.endemic.plot, width = 12, height = 8)
+ggsave("./Figures/Fungal_endemic_species_heatmap_top50_Order_7Aug19.png", plot = Heatmap.sitelayer.endemic.plot, width = 4, height = 8)
 ```
 
 ```{r}

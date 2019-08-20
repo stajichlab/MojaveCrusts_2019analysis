@@ -300,6 +300,7 @@ tax_table(phyloGlom)
 Instead of using unique Species name, OTU.ID will be used instead becasue they are unique
 ```{r}
 glomTax = tax_table(phyloGlom)[,"OUT.ID"]
+glomTax
 ```
 
 Combine OTU table and Tax table
@@ -339,30 +340,30 @@ ASV.no0
 Subset sampleData phyloseq object for the desired variable (e.g. treatment, depth, crust type, etc.)
 
 ```{r}
-Crust_type.Mojave = subset(sampleData,select = "Crust_type")
+Crust_type.Mojave = subset(sampleData,select = "Site")
 ```
 
 ```{r}
-class(sampleData$Site_)
+class(sampleData$Site_layer)
 ```
 
 
 Make the varible numeric
 
 ```{r}
-sampleData$Crust_type
+sampleData$Site
 ```
 
 ```{r}
-Crust_type.Mojave$Crust_type = as.numeric(as.factor(Crust_type.Mojave$Crust_type))
-Crust_type.Mojave$Crust_type
+Crust_type.Mojave$Site = as.numeric(as.factor(Crust_type.Mojave$Site))
+Crust_type.Mojave$Site
 ```
 
 
 Run indval code from lab.dsv 
 
 ```{r}
-Crust_type.Mojave.indic = indval(ASV.no0,Crust_type.Mojave$Crust_type)
+Crust_type.Mojave.indic = indval(ASV.no0,Crust_type.Mojave$Site)
 ```
 
 ```{r}
@@ -420,6 +421,15 @@ names(Crust_type.Mojave.indic.indval_filtered)[names(Crust_type.Mojave.indic.ind
 head(Crust_type.Mojave.indic.indval_filtered)
 ```
 
+```{r}
+names(Crust_type.Mojave.indic.indval_filtered)[names(Crust_type.Mojave.indic.indval_filtered) == "1"] <- "CIMA"
+names(Crust_type.Mojave.indic.indval_filtered)[names(Crust_type.Mojave.indic.indval_filtered) == "2"] <- "GMT"
+names(Crust_type.Mojave.indic.indval_filtered)[names(Crust_type.Mojave.indic.indval_filtered) == "3"] <- "JTNP"
+names(Crust_type.Mojave.indic.indval_filtered)[names(Crust_type.Mojave.indic.indval_filtered) == "4"] <- "KELSO"
+
+head(Crust_type.Mojave.indic.indval_filtered)
+```
+
 Add otu table from filtered indval table
 ```{r}
 indic.otumat <- as(as.matrix(Crust_type.Mojave.indic.indval_filtered), "matrix")
@@ -432,7 +442,7 @@ head(indic.OTU)
 
 add metadata table
 ```{r warning=FALSE}
-indic.meta = read.table("Fun.indic.meta.tsv",
+indic.meta = read.table("Fun.indic.meta.site.tsv",
                   header=TRUE,row.names=1,
                   sep="\t",stringsAsFactors=FALSE)
 ```
@@ -479,12 +489,24 @@ Heatmap.indic.physeq = prune_taxa(names(sort(taxa_sums(indic.physeq),TRUE)[1:65]
 ```
 
 ```{r}
+indic.physeq
+```
+```{r}
+sample_data(indic.physeq)
+```
+
+```{r}
+Heatmap.indic.physeq.plot = plot_heatmap(Heatmap.indic.physeq, "PCoA", "bray", sample.label = NULL ,"Genus")+ ggtitle("Bacterial indicator species heatmap (P < 0.05)") + theme(plot.title = element_text(hjust = 0.5))
+print(Heatmap.indic.physeq.plot)
+```
+
+```{r}
 Heatmap.indic.physeq.plot = plot_heatmap(Heatmap.indic.physeq, "PCoA", "bray", sample.label = NULL ,"Genus", sample.order = c("LAC", "CLC", "GLC", "RMC", "SMC"))+ ggtitle("Bacterial indicator species heatmap (P < 0.05)") + theme(plot.title = element_text(hjust = 0.5))
 print(Heatmap.indic.physeq.plot)
 ```
 
 ```{r}
-ggsave("./Figures/Heatmap_indicator_species_Genuslevel_0.01P.png", plot = Heatmap.indic.physeq.plot, width = 12, height = 8)
+ggsave("./Figures/Heatmap_indicator_species_Genuslevel_0.05P.png", plot = Heatmap.indic.physeq.plot, width = 12, height = 8)
 ```
 
 
@@ -496,7 +518,7 @@ indic.TAX = tax_table(indic.physeq)
 ```
 
 ```{r warning=FALSE}
-otu <- read.table("MojaveBacQ2FWLE.otu_table.fix.txt",header=T,sep="\t")
+otu <- read.table("MC2018FC.otu_table.txt",header=T,sep="\t")
 otus.filtered = otu[otu$OTU.ID %in% OTU_SF_merge_crust_type_endemic_df$OTUendemic,]
 indic.otus.filtered = otus.filtered[otus.filtered$OTU.ID %in% row.names(indvalsummary),]
 indic.otus.filtered.rn = indic.otus.filtered[,-1]

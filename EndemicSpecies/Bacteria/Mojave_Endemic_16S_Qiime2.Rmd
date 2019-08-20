@@ -330,6 +330,8 @@ sample_data(physeq.endemic.prune.rarefy.merge.sitelayer)$Site_layer <- factor(sa
 physeq.endemic.prune.rarefy.merge.sitelayer
 ```
 
+
+
 ###STEP21:Plot heatmap for all bacterial endemic species
 Results show 2 main phylum for endemic species which include Cynobacteria and Proteobacteria
 ```{r}
@@ -377,6 +379,7 @@ pdf("/Volumes/GoogleDrive/My Drive/UCR2019/Mojave_project2019/MojaveCrusts_2019a
 plot_tree(Heatmap.sitelayer.endemic.cyano, nodelabf=nodeplotboot(), ladderize="left", color="Site_layer", label.tips = "Genus", text.size = 2) + ggtitle("Endemic Cyanobacteria tree (top 50 ASVs)") + theme(plot.title = element_text(hjust = 0.5))
 dev.off()
 ```
+
 ###STEP23.1:Plot heatmap for Proteobacteria endemic species
 
 ```{r}
@@ -395,12 +398,13 @@ ggsave("/Volumes/GoogleDrive/My Drive/UCR2019/Mojave_project2019/MojaveCrusts_20
 
 ###STEP23.2:Plot tree for Cyanobacteria endemic species
 ```{r}
-plot_tree(Heatmap.sitelayer.endemic.proteo, nodelabf=nodeplotboot(), ladderize="left", color="Site_layer", label.tips = "Genus", text.size = 2) + ggtitle("Endemic Proteobacteria tree") + theme(plot.title = element_text(hjust = 0.5))
+Tree.sitelayer.endemic <- prune_taxa(names(sort(taxa_sums(physeq.endemic.prune.rarefy.merge.sitelayer),TRUE)[1:200]), physeq.endemic.prune.rarefy.merge.sitelayer)
+plot_tree(Tree.sitelayer.endemic, nodelabf=nodeplotboot(), ladderize="left", color="Site_layer", label.tips = "Genus", text.size = 2) + ggtitle("Endemic Proteobacteria tree") + theme(plot.title = element_text(hjust = 0.5))
 ```
 
 ```{r}
-pdf("/Volumes/GoogleDrive/My Drive/UCR2019/Mojave_project2019/MojaveCrusts_2019analysis/EndemicSpecies/Bacteria/Figures/Endemic_Proteo_top50.pdf" )
-plot_tree(Heatmap.sitelayer.endemic.proteo, nodelabf=nodeplotboot(), ladderize="left", color="Site_layer", label.tips = "Genus", text.size = 2) + ggtitle("Endemic Proteobacteria tree (top 50 ASVs)") + theme(plot.title = element_text(hjust = 0.5))
+pdf("./Figures/Endemic_top200.pdf", width = 8, height = 12 )
+plot_tree(Tree.sitelayer.endemic, nodelabf=nodeplotboot(), ladderize="left", color="Site_layer", label.tips = "Genus", text.size = 2) + ggtitle("Endemic Bacterial tree top 200") + theme(plot.title = element_text(hjust = 0.5))
 dev.off()
 ```
 
