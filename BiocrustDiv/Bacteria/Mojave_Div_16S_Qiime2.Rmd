@@ -1,7 +1,7 @@
 ---
 title: "Mojave_Div_16S_Qiime2"
 author: "Nat Pombubpa"
-date: "Updated on August 5, 2019"
+date: "Updated on October 1, 2019"
 output: html_document
 ---
 
@@ -35,6 +35,7 @@ library(tidyr)
 library(tidyverse)
 library(multcompView)
 library(VennDiagram)
+library(car)
 ```
 
 ####Function to summarize taxonomy 
@@ -241,9 +242,9 @@ OTU = otu_table(otumat, taxa_are_rows = TRUE)
 ###STEP4: Import taxonomy table for analysis using Phyloseq
 This taxonomy table was created from STEP2.
 ```{r warning=FALSE}
-taxmat <- read.csv("taxonomy_phyloseq_fix.csv", 
+taxmat <- read.csv("taxonomy_phyloseq_fix_copy.csv", 
                    sep=",",row.names=1)
-row.names(taxmat) = taxmat$OTU.ID
+#row.names(taxmat) = taxmat$OTU.ID
 taxmat <- as(as.matrix(taxmat),"matrix")
 TAX = tax_table(taxmat)
 ```
@@ -548,6 +549,11 @@ physeq.prune.rarefy.SF = subset_samples(physeq.prune.rarefy, Layer=="Surface")
 ```
 
 ```{r}
+physeq.prune.rarefy.SF = subset_samples(physeq.prune.rarefy, Layer=="Surface")
+sample_data(physeq.prune.rarefy.SF)$Site = factor(sample_data(physeq.prune.rarefy.SF)$Site, levels = c("CIMA", "KELSO", "GMT", "JTNP"))
+```
+
+```{r}
 alpha.diversity.SF = estimate_richness(physeq.prune.rarefy.SF, measures = c("Observed"))
 data.anova.SF = cbind(sample_data(physeq.prune.rarefy.SF), alpha.diversity.SF)
 physeq.prune.rarefy.anova.SF = aov(Observed ~ Site, data.anova.SF)
@@ -590,10 +596,34 @@ physeq.prune.rarefy.plot.richness.Site
 ```
 
 ```{r warning=FALSE}
-pdf("./Figures/Fig2B_Bacterial_Alpha_Div_by_Site.pdf", width = 6, height = 3.8 )
+pdf("./Figures/Fig2B_Bacterial_Alpha_Div_by_Site_reorder_site.pdf", width = 6, height = 3.8 )
 physeq.prune.rarefy.plot.richness.Site
 dev.off()
 ```
+
+
+Figure S2 A&B
+
+```{r}
+physeq.prune.rarefy.SF = subset_samples(physeq.prune.rarefy, Layer=="Surface")
+sample_data(physeq.prune.rarefy.SF)$Site = factor(sample_data(physeq.prune.rarefy.SF)$Site, levels = c("CIMA", "KELSO", "GMT", "JTNP"))
+sample_data(physeq.prune.rarefy.SF)$Crust_type = factor(sample_data(physeq.prune.rarefy.SF)$Crust_type, levels = c("LAC", "CLC", "GLC", "RMC","SMC"))
+```
+
+```{r}
+APS = subset_taxa(physeq.prune.rarefy.SF, Phylum == "D_1__Acidobacteria")
+
+physeq.prune.rarefy.plot.richness.Site.phylum = plot_richness(APS, x="Crust_type", color=("Crust_type"), measures=c("Observed")) + geom_boxplot(lwd=0.5) + ggtitle("Acidobacteria") + stat_compare_means(method = "anova") + theme(plot.title = element_text(hjust = 0.5)) + theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + scale_colour_brewer(palette="Set1")
+
+physeq.prune.rarefy.plot.richness.Site.phylum
+```
+
+```{r warning=FALSE}
+pdf("./Figures/FigS2B_D_1__Acidobacteria.pdf", width = 6, height = 3.8 )
+physeq.prune.rarefy.plot.richness.Site.phylum
+dev.off()
+```
+
 
 Subsurface
 
@@ -612,12 +642,16 @@ physeq.prune.rarefy.plot.richness.Site.SUB
 
 MS: Figure 2 D
 
+
+
 ```{r}
 alpha.diversity = estimate_richness(physeq.prune.rarefy, measures = c("Observed"))
 data.anova = cbind(sample_data(physeq.prune.rarefy), alpha.diversity)
 t.test(Observed ~ Layer, data.anova)
 ```
-
+```{r}
+sample_data(physeq.prune.rarefy)$Layer = factor(sample_data(physeq.prune.rarefy)$Layer, levels = c("Surface", "Subsurface"))
+```
 
 ```{r}
 
@@ -628,13 +662,33 @@ physeq.prune.rarefy.plot.richness.Layer
 
 
 ```{r warning=FALSE}
-pdf("./Figures/Fig2D_Bacterial_Alpha_Div_by_Layer.pdf", width = 6, height = 3.8 )
+pdf("./Figures/Fig2D_Bacterial_Alpha_Div_by_Layer_surface_left.pdf", width = 6, height = 3.8 )
 physeq.prune.rarefy.plot.richness.Layer
 dev.off()
 ```
 
 
 MS: Figure 2 F Bacterial alpha Div by Crust type (Surface only)
+```{r}
+head(data.anova)
+```
+
+Checking homoscedasticity. If Levene's test p value < 0.05, data are heteroscedastic and need to use Welch correction.
+
+instead of "physeq.prune.rarefy.anova.Crusttype.SF = aov(Observed ~ Crust_type, data.anova)"
+we will do oneway.test "oneway.test(Observed ~ Crust_type, data = data.anova, var.equal = F)"
+```{r}
+leveneTest(Observed ~ Crust_type, data = data.anova)
+```
+
+```{r}
+oneway.test(Observed ~ Crust_type, data = data.anova, var.equal = F)
+```
+
+```{r}
+physeq.prune.rarefy.SF = subset_samples(physeq.prune.rarefy, Layer=="Surface")
+sample_data(physeq.prune.rarefy.SF)$Crust_type = factor(sample_data(physeq.prune.rarefy.SF)$Crust_type, levels = c("LAC", "CLC", "GLC" ,"RMC", "SMC"))
+```
 
 ```{r}
 alpha.diversity = estimate_richness(physeq.prune.rarefy.SF, measures = c("Observed"))
@@ -690,7 +744,7 @@ physeq.prune.rarefy.plot.richness.Crust_type
 To save Alpha diversity (Observed) by Crust type plot as a pdf into Figures directory.
 
 ```{r warning=FALSE}
-pdf("./Figures/Fig2F_Bacterial_Alpha_Div_by_Crust_type.pdf", width = 6, height = 3.8 )
+pdf("./Figures/Fig2F_Bacterial_Alpha_Div_by_Crust_type_reorder_type.pdf", width = 6, height = 3.8 )
 physeq.prune.rarefy.plot.richness.Crust_type
 dev.off()
 ```
@@ -774,6 +828,11 @@ physeq.prune.rarefy
 #ps.glom.Class = tax_glom(physeq.prune.rarefy, taxrank = "Genus")
 ```
 
+
+```{r}
+sample_data(physeq.prune.rarefy)$Layer = factor(sample_data(physeq.prune.rarefy)$Layer, levels = c("Surface", "Subsurface"))
+```
+
 ```{r fig.height=5, fig.width=8, fig.align="center"}
 taxcom_layer = ggplot(data = psmelt(physeq.prune.rarefy), mapping = aes_string(x = "Layer" ,y = "Abundance", fill = "Phylum" )) + 
   geom_bar(stat="identity", position="fill") + 
@@ -785,7 +844,7 @@ print(taxcom_layer)
 
 
 ```{r}
-png("./Figures/Fig4A_Bacterial_Taxonomic_Composition_(Phylum_level)_by_Layer.png", units="in", width = 8, height = 5.8, res = 300 )
+png("./Figures/Fig4A_Bacterial_Taxonomic_Composition_(Phylum_level)_by_Layer_reorder.png", units="in", width = 8, height = 5.8, res = 300 )
 taxcom_layer
 dev.off()
 ```
@@ -796,6 +855,9 @@ pdf("./Figures/Fig4A_Bacterial_Taxonomic_Composition_(Phylum_level)_by_Layer.pdf
 taxcom_layer
 dev.off()
 ```
+
+
+
 
 
 MS: Figure S2A
@@ -949,10 +1011,10 @@ BacPhylum.all
 ```
 
 ```{r}
-pdf("./Figures/Bacterial_Phylum_Alpha_(Observed)_Diversity_by_Layer.pdf", width = 6, height = 3.8)
+pdf("./Figures/Bacterial_Phylum_Alpha_(Observed)_Diversity_by_Layer_Surface_left.pdf", width = 6, height = 3.8)
 for (i in BacPhylum.all) {
   APS = subset_taxa(physeq.prune.rarefy, Phylum == i)
-  APS.plot = plot_richness(APS, x="Layer", color =("Layer"), measures=c("Observed")) + geom_boxplot(lwd=0.5) + ggtitle(i) + stat_compare_means(method = "t.test", label.x.npc = c("right")) + theme(plot.title = element_text(hjust = 0.5)) + theme_bw() + scale_colour_brewer(palette="Set1") + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+  APS.plot = plot_richness(APS, x="Layer", color =("Layer"), measures=c("Observed")) + geom_boxplot(lwd=0.5) + ggtitle(i) + stat_compare_means(method = "t.test", label.x.npc = c("left")) + theme(plot.title = element_text(hjust = 0.5)) + theme_bw() + scale_colour_brewer(palette="Set1") + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
   print(APS.plot)
 }
 dev.off()
@@ -966,14 +1028,21 @@ t.test(Observed ~ Layer, data.anova.actino)
 ```
 
 ```{r}
-APS = subset_taxa(physeq.prune.rarefy, Phylum == "D_1__Acidobacteria")
-alpha.diversity.acido = estimate_richness(APS, measures = c("Observed"))
-data.anova.acido = cbind(sample_data(APS), alpha.diversity.acido)
-t.test(Observed ~ Layer, data.anova.acido)
+BacPhylum.all = as.character(get_taxa_unique(physeq.prune.rarefy, "Phylum"))
+BacPhylum.all = BacPhylum.all[complete.cases(BacPhylum.all)]
+BacPhylum.all
 ```
 
 ```{r}
-APS = subset_taxa(physeq.prune.rarefy, Phylum == "D_1__Cyanobacteria")
+APS = subset_taxa(physeq.prune.rarefy.SF, Phylum == "D_1__Verrucomicrobia")
+alpha.diversity.acido = estimate_richness(APS, measures = c("Observed"))
+data.anova.acido = cbind(sample_data(APS), alpha.diversity.acido)
+ps.aov = aov(Observed ~ Crust_type, data.anova.acido)
+summary(ps.aov)
+```
+
+```{r}
+APS = subset_taxa(physeq.prune.rarefy, Phylum == "D_1__Verrucomicrobia")
 alpha.diversity.cyano = estimate_richness(APS, measures = c("Observed"))
 data.anova.cyano = cbind(sample_data(APS), alpha.diversity.cyano)
 t.test(Observed ~ Layer, data.anova.cyano)
@@ -1253,13 +1322,33 @@ head(Bac.indic.species)
 
 
 
+Get Top taxa
+
+```{r}
+physeq.prune.rarefy.SF = subset_samples(physeq.prune.rarefy, Layer=="Surface")
+physeq.prune.rarefy.SF = subset_taxa(physeq.prune.rarefy.SF, Phylum == "D_1__Cyanobacteria")
+physeq.prune.rarefy.SF.LAC = subset_samples(physeq.prune.rarefy.SF, Crust_type=="LAC")
+physeq.prune.rarefy.SF.LAC.top10 = prune_taxa(names(sort(taxa_sums(physeq.prune.rarefy.SF.LAC), TRUE))[1:20], physeq.prune.rarefy.SF.LAC)
+physeq.prune.rarefy.SF.LAC.top10
+```
+
+```{r}
+tax_table(physeq.prune.rarefy.SF.LAC.top10)
+```
 
 
+```{r}
+physeq.prune.rarefy.SF = subset_samples(physeq.prune.rarefy, Layer=="Surface")
+physeq.prune.rarefy.SF = subset_taxa(physeq.prune.rarefy.SF, Phylum == "D_1__Cyanobacteria")
+physeq.prune.rarefy.SF.CLC = subset_samples(physeq.prune.rarefy.SF, Crust_type=="CLC")
+physeq.prune.rarefy.SF.CLC.top10 = prune_taxa(names(sort(taxa_sums(physeq.prune.rarefy.SF.CLC), TRUE))[1:20], physeq.prune.rarefy.SF.CLC)
+physeq.prune.rarefy.SF.CLC.top10
+```
 
 
-
-
-
+```{r}
+tax_table(physeq.prune.rarefy.SF.CLC.top10)
+```
 
 
 

@@ -1,0 +1,4 @@
+"","Row.names","group","indval","pvalue","freq","OUT.ID","Kingdom","Phylum","Class","Order","Family","Genus","Species"
+"1","OTU396",2,0.12962962962963,0.042,3,"OTU396","Fungi","Ascomycota","Eurotiomycetes","Eurotiales","Elaphomycetaceae","Elaphomyces","Elaphomyces muricatus"
+"2","OTU547",2,0.183899176954733,0.033,16,"OTU547","Fungi","Ascomycota","Lecanoromycetes","Lecideales","Lecideaceae","Lecidea","Lecidea laboriosa"
+"3","OTU9",2,0.259174906157174,0.033,3,"OTU9","Fungi","Ascomycota","Eurotiomycetes","Verrucariales","Verrucariaceae","Placidium","Placidium lacinulatum"

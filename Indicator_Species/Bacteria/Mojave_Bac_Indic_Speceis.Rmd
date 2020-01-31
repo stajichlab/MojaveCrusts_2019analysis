@@ -1,7 +1,7 @@
 ---
 title: "Mojave_Bac_Indic_Species"
 author: "Nat Pombubpa"
-date: "Updated on May 23, 2019"
+date: "Updated on Sep 7, 2019"
 output: html_document
 ---
 
@@ -79,6 +79,7 @@ Check if your metadata file has been import successfully and correctly, the outp
 tail(meta)
 ```
 
+*Skip this step for surface/subsurface analysis
 ```{r}
 meta = meta[which(meta$Layer %in% c("Surface")),]
 ```
@@ -348,30 +349,33 @@ ASV.no0 = ASV[, colSums(ASV != 0) > 0]
 Subset sampleData phyloseq object for the desired variable (e.g. treatment, depth, crust type, etc.)
 
 ```{r}
-Crust_type.Mojave = subset(sampleData,select = "Crust_type")
+Crust_type.Mojave = subset(sampleData,select = "Layer")
 ```
 
 ```{r}
-class(sampleData$Site)
+class(sampleData$Layer)
+```
+```{r}
+Crust_type.Mojave
 ```
 
 
 Make the varible numeric
 
 ```{r}
-sampleData$Site
+sampleData$Layer
 ```
 
 ```{r}
-Crust_type.Mojave$Crust_type = as.numeric(as.factor(Crust_type.Mojave$Crust_type))
-Crust_type.Mojave$Crust_type
+Crust_type.Mojave$Layer = as.numeric(as.factor(Crust_type.Mojave$Layer))
+Crust_type.Mojave$Layer
 ```
 
 
 Run indval code from lab.dsv 
 
 ```{r}
-Crust_type.Mojave.indic = indval(ASV.no0,Crust_type.Mojave$Crust_type)
+Crust_type.Mojave.indic = indval(ASV.no0,Crust_type.Mojave$Layer)
 ```
 
 ```{r}
@@ -451,6 +455,14 @@ names(Crust_type.Mojave.indic.indval_filtered)[names(Crust_type.Mojave.indic.ind
 head(Crust_type.Mojave.indic.indval_filtered)
 ```
 
+```{r}
+names(Crust_type.Mojave.indic.indval_filtered)[names(Crust_type.Mojave.indic.indval_filtered) == "1"] <- "Subsurface"
+names(Crust_type.Mojave.indic.indval_filtered)[names(Crust_type.Mojave.indic.indval_filtered) == "2"] <- "Surface"
+
+head(Crust_type.Mojave.indic.indval_filtered)
+```
+
+
 Add otu table from filtered indval table
 ```{r}
 indic.otumat <- as(as.matrix(Crust_type.Mojave.indic.indval_filtered), "matrix")
@@ -463,7 +475,7 @@ head(indic.OTU)
 
 add metadata table
 ```{r warning=FALSE}
-indic.meta = read.table("Bac.indic.meta.tsv",
+indic.meta = read.table("Bac.indic.meta.layer.tsv",
                   header=TRUE,row.names=1,
                   sep="\t",stringsAsFactors=FALSE)
 ```
@@ -502,15 +514,20 @@ indic.physeq.OTU.Tax.tab
 ```
 
 ```{r}
-write.csv(indic.physeq.OTU.Tax.tab, file="Bac.indvalsummary.site.Mojave.csv")
+write.csv(indic.physeq.OTU.Tax.tab, file="Bac.indvalsummary.layer.Mojave.csv")
 ```
 
 ```{r}
-Heatmap.indic.physeq = prune_taxa(names(sort(taxa_sums(indic.physeq),TRUE)[1:65]),indic.physeq)
+Heatmap.indic.physeq = prune_taxa(names(sort(taxa_sums(indic.physeq),TRUE)[1:100]),indic.physeq)
 ```
 
 ```{r}
-Heatmap.indic.physeq.plot = plot_heatmap(indic.physeq, "PCoA", "bray", sample.label = NULL ,"Genus", sample.order = c("LAC", "CLC", "GLC", "RMC", "SMC"))+ ggtitle("Bacterial indicator species heatmap (P < 0.05)") + theme(plot.title = element_text(hjust = 0.5))
+tax_table(indic.physeq)
+```
+
+
+```{r}
+Heatmap.indic.physeq.plot = plot_heatmap(Heatmap.indic.physeq, "PCoA", "bray","Layer","Kingdom")+ ggtitle("Bacterial indicator species heatmap (P < 0.05)") + theme(plot.title = element_text(hjust = 0.5))
 print(Heatmap.indic.physeq.plot)
 ```
 

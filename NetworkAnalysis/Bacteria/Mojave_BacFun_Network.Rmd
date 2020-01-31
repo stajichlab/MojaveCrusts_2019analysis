@@ -29,7 +29,13 @@ head(tax.circlize)
 ```
 
 ```{r}
-cdf.w.tax = data.frame(OTU1=tax.circlize[match(cdf$OTU1, tax.circlize$OTU.ID), 4], OTU2=tax.circlize[match(cdf$OTU2, tax.circlize$OTU.ID), 4], WEIGHT=cdf$WEIGHT)
+cdf.w.tax = data.frame(OTU1=tax.circlize[match(cdf$OTU1, tax.circlize$OTU.ID), 5], OTU2=tax.circlize[match(cdf$OTU2, tax.circlize$OTU.ID), 5], WEIGHT=cdf$WEIGHT)
+cdf.w.tax
+```
+
+#Genus level for checking only
+```{r}
+cdf.w.tax = data.frame(OTU1=tax.circlize[match(cdf$OTU1, tax.circlize$OTU.ID), 8], OTU2=tax.circlize[match(cdf$OTU2, tax.circlize$OTU.ID), 8], WEIGHT=cdf$WEIGHT)
 cdf.w.tax
 ```
 

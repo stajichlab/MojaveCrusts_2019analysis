@@ -1,0 +1,269 @@
+---
+title: "Mojave_Div_ITS_phyloseq"
+author: "Nat Pombubpa"
+date: "Updated on December 11, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+###STEP1: Load all necessary packages for analysis
+More information about Phyloseq can be found at the following link: [Phyloseq](https://joey711.github.io/phyloseq/)
+If you get error in this step, you probably need to install any packages which causes error.
+
+```{r warning=FALSE, message=FALSE}
+library(ape)
+library(vegan)
+library(dplyr)
+library(scales)
+library(grid)
+library(reshape2)
+library(phyloseq)
+library(magrittr)
+library(ggplot2)
+library(ggpubr)
+library(plyr)
+library(data.table)
+library(tidyr)
+library(tidyverse)
+library(multcompView)
+```
+
+###STEP2: Import Mapping file (metadate file)
+1.Check mapping file before import to R, R doesn’t seem to like sample name to start with number or contain “-” in sample name. If you get error in this step, you should check file name first.
+
+2.First column of first row should not start with #, R will not read the first row that starts with #
+
+3. You can choose which samples to include in analysis by indicating "KEEP" in Description column
+
+```{r}
+meta = read.table("Mojave_mappingfile_8-Aug-2018.txt",header=TRUE,row.names=1,sep="\t",stringsAsFactors=FALSE)
+```
+
+If need to keep or remove some samples
+```{r}
+#meta <- meta[which(meta$Layer %in% c("Surface")),]
+```
+
+###STEP3: Check if your metadata file has been import successfully and correctly
+
+The output will show a table of your metadata file (mapping file).
+
+*If you do not have header, you might start your first row with #
+
+```{r warning=FALSE}
+head(meta)
+```
+
+###STEP4: Construct sample_data-class using imported metadata
+
+```{r}
+sampleData <- sample_data(meta)
+```
+
+###STEP5: Import OTU table
+
+OTU table from Mojave 16S data is “MC2017FC.otu_table.txt”.
+MC-Mojave Crust-2017-FC-Fungi completed
+
+```{r}
+otus <- read.table("MC2018FC.otu_table.txt",header=T,sep="\t",row.names=1)
+otumat <- as(as.matrix(otus), "matrix")
+OTU = otu_table(otumat, taxa_are_rows = TRUE)
+```
+
+Check imported OTU table
+
+```{r warning=FALSE}
+head(OTU)
+```
+
+###STEP6: Import taxonomy table
+Taxonmy table generated from AMPtk need to be rearranged using following script.
+
+“perl rdp_taxonmy2mat.pl<Input_taxonmy.txt>Output_taxonomy.txt”
+
+rdp_taxonomy2mat.pl was created by Professor Jason E. Stajich
+
+```{r}
+taxmat <- read.table("MC2018FC.taxonomy.fix.txt", header=T,sep="\t",row.names=1)
+taxmat <- as(as.matrix(taxmat),"matrix")
+TAX = tax_table(taxmat)
+```
+
+###STEP7: Import phylogenetic tree
+Phylogenetic tree can also be include for further phylogenetic analysis.
+
+```{r warning=FALSE}
+treefile = "MC2018FC.tree.phy"
+tree = read.tree(treefile)
+```
+
+###STEP8: Construct Phyloseq object
+To construct phyloseq object, otu table, taxonomy table, and sampleData are required. Phylogenetic tree can be included, but it is not necessary for constructing phyloseq object.
+Construct Phyloseq object called "Physeq"
+
+```{r warning=FALSE}
+physeq = phyloseq(OTU,TAX,sampleData,tree)
+```
+
+Check phyloseq object
+This should indicate that your physeq is a "phyloseq-class experiment-level object""
+
+```{r warning=FALSE}
+physeq
+```
+
+###STEP9: Remove singletons
+Remove any OTUs that present only one time.
+
+```{r }
+physeq.prune = prune_taxa(taxa_sums(physeq) > 1, physeq)
+```
+
+```{r warning=FALSE}
+physeq.prune
+```
+
+###STEP10: Plot read counts to check dataset
+Check read counts: any samples that have very low reads should be removed.
+[Ref](http://evomics.org/wp-content/uploads/2016/01/phyloseq-Lab-01-Answers.html)
+
+```{r}
+readcount = data.table(as(sample_data(physeq.prune), "data.frame"),
+                 TotalReads = sample_sums(physeq.prune), 
+                 keep.rownames = TRUE)
+setnames(readcount, "rn", "SampleID")
+
+#For plotting, use command below.
+#SeqDepth = ggplot(readcount, aes(TotalReads)) + geom_histogram() + ggtitle("Sequencing Depth")
+```
+
+TotalReads of all the samples can be in this table (select only SampleID and TotalReads columns).
+In order to check samples with low number of reads, "order()" can be used to sort "TotalReads" column.
+In this dataset, N55.Rhizo has very low number of reads, so will will filter this sample out using the next minimum number of reads.
+```{r}
+readcount = readcount[order(readcount$TotalReads), c("SampleID", "TotalReads")]
+```
+
+```{r}
+head(readcount)
+```
+
+```{r warning=FALSE}
+set.seed(1)
+physeq.prune.rarefy = rarefy_even_depth(physeq.prune, sample.size = 6842, replace = FALSE, trimOTUs = FALSE)
+physeq.prune.rarefy
+```
+
+```{r}
+physeq.prune.rarefy = subset_taxa(physeq.prune.rarefy, Kingdom == "Fungi")
+physeq.prune.rarefy
+```
+
+##Make taxonomy table into a matrix and relabel NA as unknown
+```{r}
+tax.fun <- as(tax_table(physeq.prune.rarefy),"matrix")
+head(tax.fun)
+tax.fun[is.na(tax.fun)] <- "Unknown"
+head(tax.fun)
+```
+
+###Convert tax table back to phyloseq object and generate phyloseq object with new tax table
+```{r}
+TAX.fun <- tax_table(tax.fun)
+fun.3 <- phyloseq(sample_data(physeq.prune.rarefy),otu_table(physeq.prune.rarefy),TAX.fun)
+fun.3
+```
+
+```{r}
+glom.fun <- tax_glom(fun.3,taxrank = "Class")
+glom.fun
+```
+
+```{r}
+tax_table(glom.fun)
+```
+
+##Transform OTU table to show relative abundance
+##Samples can also be merged together by a variable in the mapping file
+
+```{r}
+fun.abund <- merge_samples(glom.fun, "Layer")
+sample_data(fun.abund)$Layer <- factor(sample_names(fun.abund))
+fun.abund = transform_sample_counts(fun.abund, function(x) x / sum(x))
+fun.abund
+```
+
+##Merge taxonomic data with OTU table and mapping file (Can alter code to change taxonomic rank to Order, Class, Family, etc.) and change Phylum column from a factor to a character.
+
+```{r}
+data_glom.fun <- psmelt(fun.abund)
+data_glom.fun$Class <- as.character(data_glom.fun$Class)
+```
+
+##If a phylum has less than 1% abundance, phylum name is changed to <1% abund.
+
+```{r}
+data_glom.fun$Class[data_glom.fun$Abundance < 0.01] <- "<1% abund."
+```
+
+Count the levels present in the Phylum column
+
+```{r}
+Count = length(unique(data_glom.fun$Class))
+Count
+```
+
+Print out unique phyla names for insertion into barplots in next step.
+
+```{r}
+unique((data_glom.fun$Class))
+```
+
+Create levels of phyla represented in barplot. Levels appear on the barplot in the order they are listed
+
+```{r}
+data_glom.fun$Class <- factor(data_glom.fun$Class, levels = c("Dothideomycetes","Agaricomycetes","Eurotiomycetes","Sordariomycetes","Unknown","Lecanoromycetes","Leotiomycetes","Pezizomycetes","Mortierellomycetes","Schizosaccharomycetes","<1% abund."))
+```
+
+###Create barplot of phyla - use facet_grid to separate samples by a variable ie in mapping file. Choose colors for plot in scale_fill_manual. color names can be found at http://www.stat.columbia.edu/~tzheng/files/Rcolor.pdf *amount of colors must match amount of level in phyla column
+
+```{r}
+data_glom.fun$Layer = factor(data_glom.fun$Layer, levels = c("Surface","Subsurface"))
+```
+
+```{r fig.height=5, fig.width=8, fig.align="center"}
+# The palette with black:
+cbbPalette <- c("#009E73","#999999", "#E69F00", "#56B4E9", "#F0E442", "#0072B2", "#D55E00", "#CC79A7", "midnightblue", "lightgreen", "aquamarine4","lavenderblush2","brown", "snow3")
+taxcom_layer_pl = ggplot(data = data_glom.fun, mapping = aes_string(x = "Layer" ,y = "Abundance", fill = "Class" )) + 
+  geom_bar(stat="identity", position="fill") + 
+  ggtitle("Fungal Taxonomic Composition (Class level) by Layer")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + scale_fill_manual(values = cbbPalette)
+print(taxcom_layer_pl)
+```
+
+```{r}
+png("./Figures/Fig3A_Fungal_Taxonomic_Composition_(Class_level)_by_Layer_reorder_not_Rainbow.png", units="in", width = 5.8, height = 5.8, res = 300 )
+taxcom_layer_pl
+dev.off()
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

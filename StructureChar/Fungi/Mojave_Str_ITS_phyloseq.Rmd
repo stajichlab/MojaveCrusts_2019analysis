@@ -159,7 +159,7 @@ physeq.prune.rarefy
 
 ###STEP11: Beta diversity
 ```{r}
-ps.dist = phyloseq::distance(physeq.prune, "unifrac")
+ps.dist = phyloseq::distance(physeq.prune, "bray")
 ```
 
 ```{r}
@@ -172,7 +172,7 @@ adonis(ps.dist ~ Crust_type, as(sample_data(physeq.prune),"data.frame"))
 
 ```{r}
 physeq.prune.x = prune_taxa(taxa_sums(physeq.prune.rarefy) > 1, physeq.prune.rarefy)
-physeq.prune.x.ord <- ordinate(physeq.prune.x, "PCoA", "unifrac")
+physeq.prune.x.ord <- ordinate(physeq.prune.x, "PCoA", "bray")
 ```
 
 ```{r}
@@ -191,7 +191,7 @@ dev.off()
 ```{r}
 physeq.prune.x = prune_taxa(taxa_sums(physeq.prune.rarefy) > 10, physeq.prune.rarefy)
 #physeq.prune.x.SF = subset_samples(physeq.prune.x, Layer=="Surface")
-physeq.prune.x.ord <- ordinate(physeq.prune.x, "PCoA", "unifrac")
+physeq.prune.x.ord <- ordinate(physeq.prune.x, "PCoA", "bray")
 ```
 
 ```{r}
@@ -220,7 +220,7 @@ dev.off()
 ```{r}
 physeq.prune.x = prune_taxa(taxa_sums(physeq.prune.rarefy) > 10, physeq.prune.rarefy)
 #physeq.prune.x.SF = subset_samples(physeq.prune.x, Layer=="Surface")
-physeq.prune.x.ord <- ordinate(physeq.prune.x, "PCoA", "unifrac")
+physeq.prune.x.ord <- ordinate(physeq.prune.x, "PCoA", "bray")
 ```
 
 ```{r}

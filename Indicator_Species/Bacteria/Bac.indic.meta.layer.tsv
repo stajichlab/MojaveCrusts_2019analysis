@@ -1,0 +1,4 @@
+SampleID	Layer	Crust_type	Crust_type_Site	Description
+#q2:types	categorical	categorical	categorical	categorical
+Surface	Surface	Surface	Surface	NP
+Subsurface	Subsurface	Subsurface	Subsurface	NP

@@ -1,0 +1,217 @@
+---
+title: "Taxonomic barplots with >1% abundance"
+author: "Nat Pombubpa"
+date: "12/06/2019"
+output: html_document
+---
+
+##Bacteria overall communities
+###STEP3: Import otu table for analysis using Phyloseq 
+
+```{r warning=FALSE}
+otus <- read.table("MojaveBacQ2FWLEsilva515806.otu_table.fix.txt",
+                   header=T,sep="\t",row.names = 1)
+otumat <- as(as.matrix(otus), "matrix")
+OTU = otu_table(otumat, taxa_are_rows = TRUE)
+```
+
+###STEP4: Import taxonomy table for analysis using Phyloseq
+This taxonomy table was created from STEP2.
+```{r warning=FALSE}
+taxmat <- read.csv("taxonomy_phyloseq_fix_copy.csv", 
+                   sep=",",row.names=1)
+#row.names(taxmat) = taxmat$OTU.ID
+taxmat <- as(as.matrix(taxmat),"matrix")
+TAX = tax_table(taxmat)
+```
+
+###STEP5: Import tree file for analysis using Phyloseq
+
+```{r warning=FALSE}
+treefile = "tree.nwk"
+tree = read.tree(treefile)
+```
+
+
+###STEP6: Import mapping file for analysis using Phyloseq
+
+1.Check mapping file before import to R, R will automatically change sample name that starts with number or contain “-” in sample name. If you get error in this step, you should check sample name first. 
+
+2.First column of first row should not start with #, R will not read the first row that starts with #
+
+3. You can choose which samples to include in analysis by indicating specific group in the column
+
+```{r warning=FALSE}
+meta = read.table("Mojave_mappingfile_8-Aug-2018.txt",
+                  header=TRUE,row.names=1,
+                  sep="\t",stringsAsFactors=FALSE)
+#meta <- meta[which(meta$Layer %in% c("Surface")),]
+```
+
+Construct sample_data-class using imported metadata
+```{r warning=FALSE}
+sampleData <- sample_data(meta)
+```
+
+###STEP7: Construct Phyloseq object
+To construct phyloseq object, otu table, taxonomy table, and sampleData are required. Phylogenetic tree can be included, but it is not necessary for constructing phyloseq object.
+Construct Phyloseq object called "Physeq"
+
+```{r warning=FALSE}
+physeq = phyloseq(OTU,TAX,sampleData,tree)
+```
+
+###STEP8: Check phyloseq object
+This should indicate that your physeq is a "phyloseq-class experiment-level object"
+
+```{r}
+physeq
+```
+
+###STEP9: Remove ASVs
+Remove any ASVs that present only 5 time.
+
+```{r}
+physeq.prune = prune_taxa(taxa_sums(physeq) > 5, physeq)
+```
+
+```{r}
+physeq.prune
+```
+
+###STEP10: Plot read counts to check dataset
+Check read counts: any samples that have very low reads should be removed.
+[Ref](http://evomics.org/wp-content/uploads/2016/01/phyloseq-Lab-01-Answers.html)
+
+```{r}
+readcount = data.table(as(sample_data(physeq.prune), "data.frame"),
+                 TotalReads = sample_sums(physeq.prune), 
+                 keep.rownames = TRUE)
+setnames(readcount, "rn", "SampleID")
+#For plotting, use command below.
+#SeqDepth = ggplot(readcount, aes(TotalReads)) + geom_histogram() + ggtitle("Sequencing Depth")
+```
+
+TotalReads of all the samples can be in this table (select only SampleID and TotalReads columns).
+In order to check samples with low number of reads, "order()" can be used to sort "TotalReads" column.
+In this dataset, N55.Rhizo has very low number of reads, so will will filter this sample out using the next minimum number of reads.
+```{r}
+readcount = readcount[order(readcount$TotalReads), c("SampleID", "TotalReads")]
+```
+
+```{r}
+head(readcount)
+```
+
+
+###STEP11: Rarefy OTUs to a minimum number of reads
+Rarefy OTUs (remove any samples that has very low number of reads)
+If this step work fine, you have successfully imported data to R and completely generate phyloseq object as "physeq.prune.rarefy".
+```{r warning=FALSE}
+set.seed(711)
+physeq.prune.rarefy = rarefy_even_depth(physeq.prune, sample.size = 37435, replace = FALSE, trimOTUs = TRUE)
+physeq.prune.rarefy
+```
+
+```{r}
+physeq.prune.rarefy = subset_taxa(physeq.prune.rarefy, Kingdom != "Rhizaria")
+physeq.prune.rarefy = subset_taxa(physeq.prune.rarefy, Kingdom != "Chromista")
+physeq.prune.rarefy = subset_taxa(physeq.prune.rarefy, Kingdom != "Eukaryota")
+physeq.prune.rarefy = subset_taxa(physeq.prune.rarefy, Kingdom != "Unassigned")
+physeq.prune.rarefy
+```
+
+##Make taxonomy table into a matrix and relabel NA as unknown
+```{r}
+tax.bac <- as(tax_table(physeq.prune.rarefy),"matrix")
+head(tax.bac)
+tax.bac[is.na(tax.bac)] <- "Unknown"
+head(tax.bac)
+```
+
+###Convert tax table back to phyloseq object and generate phyloseq object with new tax table
+```{r}
+TAX.bac <- tax_table(tax.bac)
+bac.3 <- phyloseq(sample_data(physeq.prune.rarefy),otu_table(physeq.prune.rarefy),TAX.bac)
+bac.3
+```
+
+
+```{r}
+glom.bac <- tax_glom(bac.3,taxrank = "Phylum")
+glom.bac
+```
+
+```{r}
+tax_table(glom.bac)
+```
+
+
+##Transform OTU table to show relative abundance
+##Samples can also be merged together by a variable in the mapping file
+
+```{r}
+bac.abund <- merge_samples(glom.bac, "Layer")
+sample_data(bac.abund)$Layer <- factor(sample_names(bac.abund))
+bac.abund = transform_sample_counts(bac.abund, function(x) x / sum(x))
+bac.abund
+```
+
+
+##Merge taxonomic data with OTU table and mapping file (Can alter code to change taxonomic rank to Order, Class, Family, etc.) and change Phylum column from a factor to a character.
+
+```{r}
+data_glom.bac <- psmelt(bac.abund)
+data_glom.bac$Phylum <- as.character(data_glom.bac$Phylum)
+```
+
+##If a phylum has less than 1% abundance, phylum name is changed to <1% abund.
+
+```{r}
+data_glom.bac$Phylum[data_glom.bac$Abundance < 0.01] <- "<1% abund."
+```
+
+Count the levels present in the Phylum column
+
+```{r}
+Count = length(unique(data_glom.bac$Phylum))
+Count
+```
+
+Print out unique phyla names for insertion into barplots in next step.
+
+```{r}
+unique((data_glom.bac$Phylum))
+```
+
+Create levels of phyla represented in barplot. Levels appear on the barplot in the order they are listed
+
+```{r}
+data_glom.bac$Phylum <- factor(data_glom.bac$Phylum, levels = c("Cyanobacteria","Proteobacteria","Actinobacteria","Acidobacteria","Chloroflexi","Bacteroidetes","Planctomycetes","Thaumarchaeota","Gemmatimonadetes","Verrucomicrobia","Unknown","Armatimonadetes","<1% abund."))
+```
+
+###Create barplot of phyla - use facet_grid to separate samples by a variable ie in mapping file. Choose colors for plot in scale_fill_manual. color names can be found at http://www.stat.columbia.edu/~tzheng/files/Rcolor.pdf *amount of colors must match amount of level in phyla column
+
+```{r}
+data_glom.bac$Layer = factor(data_glom.bac$Layer, levels = c("Surface", "Subsurface"))
+```
+
+```{r fig.height=5, fig.width=8, fig.align="center"}
+# The palette with black:
+cbbPalette <- c("#009E73","#999999", "#E69F00", "#56B4E9", "#F0E442", "#0072B2", "#D55E00", "#CC79A7", "midnightblue", "lightgreen", "aquamarine4","lavenderblush2","brown", "snow3")
+taxcom_layer_pl = ggplot(data = data_glom.bac, mapping = aes_string(x = "Layer" ,y = "Abundance", fill = "Phylum" )) + 
+  geom_bar(stat="identity", position="fill") + 
+  ggtitle("Bacterial Taxonomic Composition (Phylum level) by Layer")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + scale_fill_manual(values = cbbPalette)
+print(taxcom_layer_pl)
+```
+
+```{r}
+png("./Figures/Fig4A_Bacterial_Taxonomic_Composition_(Phylum_level)_by_Layer_reorder_not_Rainbow.png", units="in", width = 5.8, height = 5.8, res = 300 )
+taxcom_layer_pl
+dev.off()
+```
+
+
+

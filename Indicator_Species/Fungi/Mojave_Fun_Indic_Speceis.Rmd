@@ -1,7 +1,7 @@
 ---
 title: "Mojave_Fun_Indic_Species"
 author: "Nat Pombubpa"
-date: "Updated on May 24, 2019"
+date: "Updated on Sep 8, 2019"
 output: html_document
 ---
 
@@ -66,7 +66,7 @@ tree = read.tree(treefile)
 3. You can choose which samples to include in analysis by indicating specific group in the column
 
 ```{r}
-meta = read.table("Mojave_mappingfile_8-Aug-2018.txt",header=TRUE,row.names=1,sep="\t",stringsAsFactors=FALSE)
+meta = read.table("Mojave_mappingfile_8-Sep-2018.txt",header=TRUE,row.names=1,sep="\t",stringsAsFactors=FALSE)
 ```
 
 Check if your metadata file has been import successfully and correctly, the output will show a table of your metadata file (mapping file). *If you do not have header, you might start your first row with # (remove # and reload your mapping file).
@@ -139,7 +139,7 @@ Rarefy OTUs (remove any samples that has very low number of reads)
 If this step work fine, you have successfully imported data to R and completely generate phyloseq object as "physeq.prune.rarefy".
 ```{r warning=FALSE}
 set.seed(711)
-physeq.prune.rarefy = rarefy_even_depth(physeq.prune, sample.size = 31107, replace = FALSE, trimOTUs = TRUE)
+physeq.prune.rarefy = rarefy_even_depth(physeq.prune, sample.size = 10000, replace = FALSE, trimOTUs = TRUE)
 physeq.prune.rarefy
 ```
 
@@ -300,7 +300,7 @@ tax_table(phyloGlom)
 Instead of using unique Species name, OTU.ID will be used instead becasue they are unique
 ```{r}
 glomTax = tax_table(phyloGlom)[,"OUT.ID"]
-glomTax
+#glomTax
 ```
 
 Combine OTU table and Tax table
@@ -340,30 +340,30 @@ ASV.no0
 Subset sampleData phyloseq object for the desired variable (e.g. treatment, depth, crust type, etc.)
 
 ```{r}
-Crust_type.Mojave = subset(sampleData,select = "Site")
+Crust_type.Mojave = subset(sampleData,select = "Layer")
 ```
 
 ```{r}
-class(sampleData$Site_layer)
+class(sampleData$Layer)
 ```
 
 
 Make the varible numeric
 
 ```{r}
-sampleData$Site
+sampleData$Layer
 ```
 
 ```{r}
-Crust_type.Mojave$Site = as.numeric(as.factor(Crust_type.Mojave$Site))
-Crust_type.Mojave$Site
+Crust_type.Mojave$Layer = as.numeric(as.factor(Crust_type.Mojave$Layer))
+Crust_type.Mojave$Layer
 ```
 
 
 Run indval code from lab.dsv 
 
 ```{r}
-Crust_type.Mojave.indic = indval(ASV.no0,Crust_type.Mojave$Site)
+Crust_type.Mojave.indic = indval(ASV.no0,Crust_type.Mojave$Layer)
 ```
 
 ```{r}
@@ -430,6 +430,14 @@ names(Crust_type.Mojave.indic.indval_filtered)[names(Crust_type.Mojave.indic.ind
 head(Crust_type.Mojave.indic.indval_filtered)
 ```
 
+```{r}
+names(Crust_type.Mojave.indic.indval_filtered)[names(Crust_type.Mojave.indic.indval_filtered) == "1"] <- "Subsurface"
+names(Crust_type.Mojave.indic.indval_filtered)[names(Crust_type.Mojave.indic.indval_filtered) == "2"] <- "Surface"
+
+head(Crust_type.Mojave.indic.indval_filtered)
+```
+
+
 Add otu table from filtered indval table
 ```{r}
 indic.otumat <- as(as.matrix(Crust_type.Mojave.indic.indval_filtered), "matrix")
@@ -442,7 +450,7 @@ head(indic.OTU)
 
 add metadata table
 ```{r warning=FALSE}
-indic.meta = read.table("Fun.indic.meta.site.tsv",
+indic.meta = read.table("Fun.indic.meta.layer.tsv",
                   header=TRUE,row.names=1,
                   sep="\t",stringsAsFactors=FALSE)
 ```
@@ -481,7 +489,7 @@ indic.physeq.OTU.Tax.tab
 ```
 
 ```{r}
-write.csv(indic.physeq.OTU.Tax.tab, file="Fun.indvalsummary.crusttype.Mojave.csv")
+write.csv(indic.physeq.OTU.Tax.tab, file="Fun.indvalsummary.layer.Mojave.csv")
 ```
 
 ```{r}

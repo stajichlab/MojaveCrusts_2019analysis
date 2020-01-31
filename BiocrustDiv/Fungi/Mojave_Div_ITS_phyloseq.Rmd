@@ -1,7 +1,7 @@
 ---
 title: "Mojave_Div_ITS_phyloseq"
 author: "Nat Pombubpa"
-date: "Updated on August 5, 2019"
+date: "Updated on December 11, 2019"
 output: html_document
 ---
 
@@ -384,6 +384,25 @@ physeq.prune.rarefy.anova.Site.Layer = aov(Observed ~ Site*Layer, data.anova)
 summary(physeq.prune.rarefy.anova.Site.Layer)
 ```
 
+Checking homoscedasticity. If Levene's test p value < 0.05, data are heteroscedastic and need to use Welch correction.
+
+instead of "physeq.prune.rarefy.anova.Crusttype.SF = aov(Observed ~ Crust_type, data.anova)"
+we will do oneway.test "oneway.test(Observed ~ Crust_type, data = data.anova, var.equal = F)"
+
+```{r}
+library(car)
+```
+
+```{r}
+leveneTest(Observed ~ Layer, data = data.anova)
+```
+
+```{r}
+t.test(Observed ~ Layer, data.anova)
+```
+
+
+
 ```{r}
 tukey.ps = TukeyHSD(x=physeq.prune.rarefy.anova, 'Site_layer', conf.level = 0.95)
 ```
@@ -465,6 +484,11 @@ physeq.prune.rarefy.SF = subset_samples(physeq.prune.rarefy, Layer=="Surface")
 ```
 
 ```{r}
+physeq.prune.rarefy.SF = subset_samples(physeq.prune.rarefy, Layer=="Surface")
+sample_data(physeq.prune.rarefy.SF)$Site = factor(sample_data(physeq.prune.rarefy.SF)$Site, levels = c("CIMA", "KELSO", "GMT", "JTNP"))
+```
+
+```{r}
 alpha.diversity.SF = estimate_richness(physeq.prune.rarefy.SF, measures = c("Observed"))
 data.anova.SF = cbind(sample_data(physeq.prune.rarefy.SF), alpha.diversity.SF)
 physeq.prune.rarefy.anova.SF = aov(Observed ~ Site, data.anova.SF)
@@ -507,8 +531,34 @@ physeq.prune.rarefy.plot.richness.Site
 ```
 
 ```{r warning=FALSE}
-pdf("./Figures/Fig2A_Fungal_Alpha_Div_by_Site.pdf", width = 6, height = 3.8 )
+pdf("./Figures/Fig2A_Fungal_Alpha_Div_by_Site_reorder_stie.pdf", width = 6, height = 3.8 )
 physeq.prune.rarefy.plot.richness.Site
+dev.off()
+```
+
+Figure S1 A&B
+
+```{r}
+physeq.prune.rarefy.SF = subset_samples(physeq.prune.rarefy, Layer=="Surface")
+```
+
+```{r}
+physeq.prune.rarefy.SF = subset_samples(physeq.prune.rarefy, Layer=="Surface")
+sample_data(physeq.prune.rarefy.SF)$Site = factor(sample_data(physeq.prune.rarefy.SF)$Site, levels = c("CIMA", "KELSO", "GMT", "JTNP"))
+sample_data(physeq.prune.rarefy.SF)$Crust_type = factor(sample_data(physeq.prune.rarefy.SF)$Crust_type, levels = c("LAC", "CLC", "GLC", "RMC","SMC"))
+```
+
+```{r}
+APS = subset_taxa(physeq.prune.rarefy.SF, Class == "Sordariomycetes")
+
+physeq.prune.rarefy.plot.richness.Site.class = plot_richness(APS, x="Crust_type", color=("Crust_type"), measures=c("Observed")) + geom_boxplot(lwd=0.5) + ggtitle("Sordariomycetes") + stat_compare_means(method = "anova") + theme(plot.title = element_text(hjust = 0.5)) + theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + scale_colour_brewer(palette="Set1")
+
+physeq.prune.rarefy.plot.richness.Site.class
+```
+
+```{r warning=FALSE}
+pdf("./Figures/FigS1B_Sordariomycetes.pdf", width = 6, height = 3.8 )
+physeq.prune.rarefy.plot.richness.Site.class
 dev.off()
 ```
 
@@ -533,18 +583,27 @@ t.test(Observed ~ Layer, data.anova)
 ```
 
 ```{r}
+sample_data(physeq.prune.rarefy)$Layer = factor(sample_data(physeq.prune.rarefy)$Layer, levels = c("Surface", "Subsurface"))
+```
+
+```{r}
 physeq.prune.rarefy.plot.richness.Layer = plot_richness(physeq.prune.rarefy, x="Layer", color=("Layer"), measures=c("Observed")) + geom_boxplot(lwd=0.5) + ggtitle("Mojave Biocrust Fungal Alpha Diversity by Layer") + stat_compare_means(method = "t.test", label.y = 350) + theme(plot.title = element_text(hjust = 0.5)) + theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + scale_colour_brewer(palette="Set1")
 
 physeq.prune.rarefy.plot.richness.Layer
 ```
 
 ```{r warning=FALSE}
-pdf("./Figures/Fig2C_Fungal_Alpha_Div_by_Layer.pdf", width = 6, height = 3.8 )
+pdf("./Figures/Fig2C_Fungal_Alpha_Div_by_Layer_surface_left.pdf", width = 6, height = 3.8 )
 physeq.prune.rarefy.plot.richness.Layer
 dev.off()
 ```
 
 MS: Figure 2 E Fungal alpha Div by Crust type (Surface only)
+
+```{r}
+physeq.prune.rarefy.SF = subset_samples(physeq.prune.rarefy, Layer=="Surface")
+sample_data(physeq.prune.rarefy.SF)$Crust_type = factor(sample_data(physeq.prune.rarefy.SF)$Crust_type, levels = c("LAC", "CLC", "GLC" ,"RMC", "SMC"))
+```
 
 ```{r}
 alpha.diversity = estimate_richness(physeq.prune.rarefy.SF, measures = c("Observed"))
@@ -598,7 +657,7 @@ physeq.prune.rarefy.plot.richness.Crust_type
 ```
 
 ```{r warning=FALSE}
-pdf("./Figures/Fig2E_Fungal_Alpha_Div_by_Crust_type.pdf", width = 6, height = 3.8 )
+pdf("./Figures/Fig2E_Fungal_Alpha_Div_by_Crust_type_reorder_type.pdf", width = 6, height = 3.8 )
 physeq.prune.rarefy.plot.richness.Crust_type
 dev.off()
 ```
@@ -740,19 +799,27 @@ dev.off()
 MS: Figure S1B comparing taxonmic differences by Layer
 
 ```{r}
+sample_data(physeq.prune.rarefy)$Layer = factor(sample_data(physeq.prune.rarefy)$Layer, levels = c("Surface", "Subsurface"))
+```
+
+```{r}
 FungiClass.all = as.character(get_taxa_unique(physeq.prune.rarefy, "Class"))
 FungiClass.all = FungiClass.all[complete.cases(FungiClass.all)]
 FungiClass.all
 ```
 
 ```{r}
-pdf("./Figures/Bacterial_Phylum_Alpha_(Observed)_Diversity_by_Layer.pdf", width = 6, height = 3.8)
+pdf("./Figures/Fungal_Class_Alpha_(Observed)_Diversity_by_Layer_surface_left.pdf", width = 6, height = 3.8)
 for (i in FungiClass.all) {
   APS = subset_taxa(physeq.prune.rarefy, Class == i)
-  APS.plot = plot_richness(APS, x="Layer", color =("Layer"), measures=c("Observed")) + geom_boxplot(lwd=0.5) + ggtitle(i) + stat_compare_means(method = "t.test", label.x.npc = c("right")) + theme(plot.title = element_text(hjust = 0.5)) + theme_bw() + scale_colour_brewer(palette="Set1") + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+  APS.plot = plot_richness(APS, x="Layer", color =("Layer"), measures=c("Observed")) + geom_boxplot(lwd=0.5) + ggtitle(i) + stat_compare_means(method = "t.test", label.x.npc = c("left")) + theme(plot.title = element_text(hjust = 0.5)) + theme_bw() + scale_colour_brewer(palette="Set1") + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
   print(APS.plot)
 }
 dev.off()
+```
+
+```{r}
+sample_data(physeq.prune.rarefy)$Layer = factor(sample_data(physeq.prune.rarefy)$Layer, levels = c("Surface", "Subsurface"))
 ```
 
 ```{r}
@@ -762,17 +829,27 @@ print(APS.plot)
 ```
 
 ```{r}
+FungiClass.all = as.character(get_taxa_unique(physeq.prune.rarefy, "Class"))
+FungiClass.all = FungiClass.all[complete.cases(FungiClass.all)]
+FungiClass.all
+```
+
+t-test
+```{r}
 APS = subset_taxa(physeq.prune.rarefy, Class == "Sordariomycetes")
 alpha.diversity.Sordariomycetes = estimate_richness(APS, measures = c("Observed"))
 data.anova.Sordariomycetes = cbind(sample_data(APS), alpha.diversity.Sordariomycetes)
 t.test(Observed ~ Layer, data.anova.Sordariomycetes)
 ```
 
+
+Anova
 ```{r}
-APS = subset_taxa(physeq.prune.rarefy, Class == "Schizosaccharomycetes")
+APS = subset_taxa(physeq.prune.rarefy.SF, Class == "Tremellomycetes")
 alpha.diversity.Sordariomycetes = estimate_richness(APS, measures = c("Observed"))
 data.anova.Sordariomycetes = cbind(sample_data(APS), alpha.diversity.Sordariomycetes)
-t.test(Observed ~ Layer, data.anova.Sordariomycetes)
+physeq.prune.rarefy.anova = aov(Observed ~ Crust_type, data.anova.Sordariomycetes)
+summary(physeq.prune.rarefy.anova)
 ```
 
 
@@ -829,6 +906,10 @@ tax_layer
 ```
 
 ```{r}
+sample_data(physeq.prune.rarefy)$Layer = factor(sample_data(physeq.prune.rarefy)$Layer, levels = c("Surface", "Subsurface"))
+```
+
+```{r}
 ps.glom.class = tax_glom(physeq.prune.rarefy, taxrank = "Class")
 ```
 
@@ -842,7 +923,7 @@ print(taxcom_layer)
 ```
 
 ```{r}
-png("./Figures/Fig3A_Fungal_Taxonomic_Composition_(Class_level)_by_Layer.png", units="in", width = 8, height = 5.8, res = 300 )
+png("./Figures/Fig3A_Fungal_Taxonomic_Composition_(Class_level)_by_Layer_surface_left.png", units="in", width = 8, height = 5.8, res = 300 )
 taxcom_layer
 dev.off()
 ```
@@ -1010,7 +1091,15 @@ dev.off()
 ```
 
 
+Get Top taxa
 
+```{r}
+physeq.prune.rarefy.SF = subset_samples(physeq.prune.rarefy, Layer=="Surface")
+physeq.prune.rarefy.SF.top20 = prune_taxa(names(sort(taxa_sums(physeq.prune.rarefy.SF), TRUE))[1:20], physeq.prune.rarefy.SF)
+physeq.prune.rarefy.SF.top20
+```
 
-
+```{r}
+tax_table(physeq.prune.rarefy.SF.top20)
+```
 

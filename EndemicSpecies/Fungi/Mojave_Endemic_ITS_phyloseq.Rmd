@@ -1,7 +1,7 @@
 ---
 title: "Mojave_Endemic_ITS_phyloseq"
 author: "Nat Pombubpa"
-date: "Updated on April 29, 2019"
+date: "Updated on September 3, 2019"
 output: html_document
 ---
 
@@ -284,9 +284,14 @@ Heatmap.sitelayer.endemic2
 ```
 
 
+```{r}
+tax_table(Heatmap.sitelayer.endemic2)
+```
+
+
 Results show 2 main phylum for endemic species which include Ascomycota and Basidiomycota
 ```{r}
-Heatmap.sitelayer.endemic.plot = plot_heatmap(Heatmap.sitelayer.endemic2, "PCoA", "bray", "Site", high="orangered3")+ ggtitle("Endemic Fungal heatmap (top 50 OTUs)") + theme(plot.title = element_text(hjust = 0.5))
+Heatmap.sitelayer.endemic.plot = plot_heatmap(Heatmap.sitelayer.endemic2, "PCoA", "bray", "Site", "Order", high="orangered3")+ ggtitle("Endemic Fungal heatmap (top 50 OTUs)") + theme(plot.title = element_text(hjust = 0.5))
 print(Heatmap.sitelayer.endemic.plot)
 
 ggsave("./Figures/Fungal_endemic_species_heatmap_top50_Order_7Aug19.png", plot = Heatmap.sitelayer.endemic.plot, width = 4, height = 8)

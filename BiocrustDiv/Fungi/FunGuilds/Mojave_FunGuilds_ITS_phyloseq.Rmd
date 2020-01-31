@@ -105,7 +105,7 @@ physeq
 Remove any OTUs that present only one time.
 
 ```{r }
-physeq.prune = prune_taxa(taxa_sums(physeq) > 10, physeq)
+physeq.prune = prune_taxa(taxa_sums(physeq) > 1, physeq)
 ```
 
 ```{r warning=FALSE}
@@ -139,7 +139,7 @@ head(readcount)
 
 ```{r warning=FALSE}
 set.seed(1)
-physeq.prune.rarefy = rarefy_even_depth(physeq.prune, sample.size = 6664, replace = FALSE, trimOTUs = FALSE)
+physeq.prune.rarefy = rarefy_even_depth(physeq.prune, sample.size = 6758, replace = FALSE, trimOTUs = FALSE)
 physeq.prune.rarefy
 ```
 
@@ -308,12 +308,37 @@ dev.off()
 ```
 
 
+#Beta diversity
 
+```{r}
+ps.dist = phyloseq::distance(physeq.prune, "bray")
+```
 
+```{r}
+adonis(ps.dist ~ Site*Layer*Crust_type, as(sample_data(physeq.prune),"data.frame"))
+```
 
+```{r}
+physeq.prune.x = prune_taxa(taxa_sums(physeq.prune.rarefy) > 10, physeq.prune.rarefy)
+#physeq.prune.x.SF = subset_samples(physeq.prune.x, Layer=="Surface")
+physeq.prune.x.ord <- ordinate(physeq.prune.x, "NMDS", "bray")
+```
 
+```{r}
+sample_data(physeq.prune.x)$Site = factor(sample_data(physeq.prune.x)$Site, levels = c("JTNP","CIMA", "GMT", "KELSO"))
+```
 
+```{r}
+pssitelayer = plot_ordination(physeq.prune.x, physeq.prune.x.ord, type = "taxa", color = "Trophic.Mode") + ggtitle("Fungal Beta Diversity (PCoA) by Site") #+ theme(plot.title = element_text(hjust = 0.5)) + annotate("text", x = -0.2, y = 0.32, label = "PERMANOVA, p = 0.001") + geom_point(size=5) #+ scale_colour_manual(values = c("#000000", "#E69F00", "#56B4E9", "#009E73", "#CC79A7")) #+ stat_ellipse(geom = "polygon", type = "t", alpha = 1/12, aes(fill = Site_layer)) 
 
+pssitelayer
+```
+
+```{r}
+pdf("./Figures/FunGuilds Beta Diversity (PCoA) by Site (w Layer).pdf", width = 8, height = 5)
+pssitelayer
+dev.off()
+```
 
 
 
